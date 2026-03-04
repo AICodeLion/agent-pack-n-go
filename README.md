@@ -113,7 +113,8 @@ agent-pack-n-go/
 ├── scripts/
 │   ├── pack.sh                   # Old device: package everything (10 steps)
 │   ├── setup.sh                  # New device: environment setup (11 steps)
-│   └── generate-instructions.sh  # Generate Claude Code migration instructions
+│   ├── generate-instructions.sh  # Generate Claude Code migration instructions
+│   └── welcome.sh                # Post-install welcome message
 └── references/
     ├── migration-guide.md        # Complete migration manual
     └── troubleshooting.md        # Common issues & solutions
@@ -232,7 +233,8 @@ agent-pack-n-go/
 ├── scripts/
 │   ├── pack.sh                   # 旧设备：打包一切（10 步）
 │   ├── setup.sh                  # 新设备：环境安装（11 步）
-│   └── generate-instructions.sh  # 生成 Claude Code 迁移指令
+│   ├── generate-instructions.sh  # 生成 Claude Code 迁移指令
+│   └── welcome.sh                # 安装后欢迎信息
 └── references/
     ├── migration-guide.md        # 完整迁移手册
     └── troubleshooting.md        # 常见问题排查

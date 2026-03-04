@@ -12,19 +12,15 @@ description: >
 
 Migrate OpenClaw + Claude Code to a new device. Agent packs everything, user runs one command on the new device.
 
-## Post-Install Message
+## Post-Install
 
-After installing this skill, inform the user:
+After installing this skill, **run the welcome script** to show the user what it does and how to use it:
 
-> ✅ **agent-pack-n-go** installed!
->
-> This skill lets you migrate your entire OpenClaw agent — configs, memory, skills, credentials — to a new Linux device.
->
-> **To start a migration, just say:**
-> - "帮我迁移到新设备"
-> - "migrate to a new device"
->
-> I'll handle the rest: pack everything, transfer securely, and guide you through one-click deployment on the new device.
+```bash
+bash ~/.openclaw/skills/agent-pack-n-go/scripts/welcome.sh
+```
+
+Always run this script after installation — it provides the user with a brief introduction and trigger commands.
 
 ## Overview
 
