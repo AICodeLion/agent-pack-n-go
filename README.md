@@ -64,7 +64,7 @@ cd ~/.openclaw/skills
 git clone https://github.com/AICodeLion/agent-pack-n-go.git
 ```
 
-Or tell your agent: *"install the agent-pack-n-go skill from GitHub"*
+Or tell your agent: *"install agent-pack-n-go from https://github.com/AICodeLion/agent-pack-n-go"*
 
 ## Usage
 
@@ -166,7 +166,7 @@ cd ~/.openclaw/skills
 git clone https://github.com/AICodeLion/agent-pack-n-go.git
 ```
 
-或者告诉你的 Agent：*"帮我安装 agent-pack-n-go skill"*
+或者告诉你的 Agent：*"帮我安装 agent-pack-n-go skill，地址 https://github.com/AICodeLion/agent-pack-n-go"*
 
 ### 使用
 
