@@ -73,8 +73,9 @@ The agent will:
 1. Ask for new server SSH info
 2. Run `pack.sh` to bundle everything
 3. `scp` the pack to the new server
-4. Stop the old server
-5. Guide you through 2 commands on the new server
+4. Guide you through 2 commands on the new server
+
+> ⚠️ **Discord Bot note**: The same Bot Token can't run on two servers simultaneously. The agent will stop the old server right before the new one starts, causing ~5 min downtime.
 
 ## Time Estimate
 
@@ -173,8 +174,9 @@ Agent 会：
 1. 询问新服务器 SSH 信息
 2. 运行 `pack.sh` 打包一切
 3. `scp` 传输到新服务器
-4. 停止旧服务器
-5. 指导你在新服务器执行 2 条命令
+4. 指导你在新服务器执行 2 条命令
+
+> ⚠️ **Discord Bot 注意**：同一个 Bot Token 不能在两台服务器同时运行。Agent 会在新服务器启动前停止旧服务器，期间约 5 分钟离线。
 
 ### 时间估算
 
