@@ -94,7 +94,7 @@ fi
 
 # ─── [7/8] Record old username ───────────────────────────────────────────────
 step=$((step+1))
-echo -n "[${step}/${TOTAL}] Recording old server username..."
+echo -n "[${step}/${TOTAL}] Recording old device username..."
 whoami > "$TMP_DIR/old_user.txt"
 echo -e " ${GREEN}✅ ($(cat "$TMP_DIR/old_user.txt"))${NC}"
 
@@ -156,6 +156,6 @@ bash "$(dirname "$0")/generate-instructions.sh" "$OLD_USER"
 echo -e " ${GREEN}✅${NC}"
 
 echo ""
-echo -e "${GREEN}Next: scp these files to the new server:${NC}"
+echo -e "${GREEN}Next: scp these files to the new device:${NC}"
 echo "  scp ~/openclaw-migration-pack.tar.gz ~/openclaw-migration-pack.sha256 ~/setup.sh ~/migration-instructions.md USER@NEW_IP:~/"
 echo ""

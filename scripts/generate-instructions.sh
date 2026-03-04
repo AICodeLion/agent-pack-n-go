@@ -22,7 +22,7 @@ cat > "$OUTPUT" << HEREDOC
 # OpenClaw Migration Instructions
 
 > Automated migration instructions for Claude Code. Please follow all steps in order and report status after each step.
-> Old server username: \`${OLD_USER}\`
+> Old device username: \`${OLD_USER}\`
 
 ---
 
@@ -71,7 +71,7 @@ fi
 
 ## Step 3: Fix paths
 
-If the username differs between old and new server, bulk-replace paths:
+If the username differs between old and new device, bulk-replace paths:
 
 \`\`\`bash
 OLD_USER="${OLD_USER}"

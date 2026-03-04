@@ -1,6 +1,6 @@
 # agent-pack-n-go 📦🚀
 
-**Migrate your OpenClaw + Claude Code to a new server in minutes, not hours.**
+**Migrate your OpenClaw + Claude Code to a new device in minutes, not hours.**
 
 [中文版](#中文) | [English](#english)
 
@@ -10,10 +10,10 @@
 
 ## What It Does
 
-An OpenClaw Skill that automates server migration. Your agent packs everything on the old server, you run **2 commands** on the new server, and you're done.
+An OpenClaw Skill that automates device migration. Your agent packs everything on the old device, you run **2 commands** on the new device, and you're done.
 
 ```
-Old Server (Agent auto)           New Server (You: 2 commands)
+Old Device (Agent auto)           New Device (You: 2 commands)
 ┌──────────────────────┐          ┌──────────────────────┐
 │ 1. Check Claude Code │          │ 3. bash setup.sh     │
 │ 2. Pack + scp ───────┼─────────→│ 4. claude "migrate"  │
@@ -30,7 +30,7 @@ Old Server (Agent auto)           New Server (You: 2 commands)
 - **Network fallback** — Official source → Gitee mirror → error with guidance
 - **npm timeout detection** — Auto-switches to npmmirror if npm is slow
 - **Safe transfer** — All sensitive data (API keys, tokens, SSH keys) via scp, never GitHub
-- **Rollback ready** — Old server untouched, restart anytime if something fails
+- **Rollback ready** — Old device untouched, restart anytime if something fails
 
 ## What Gets Migrated
 
@@ -45,12 +45,12 @@ Old Server (Agent auto)           New Server (You: 2 commands)
 
 ## Requirements
 
-**New server:**
+**New device:**
 - Ubuntu 22.04 / 24.04
 - 2-core CPU, 2GB+ RAM
 - SSH access with sudo
 
-**Old server:**
+**Old device:**
 - Running OpenClaw installation
 
 ## Installation
@@ -67,15 +67,15 @@ Or tell your agent: *"install the agent-pack-n-go skill from GitHub"*
 
 Tell your OpenClaw agent:
 
-> "帮我迁移到新服务器" / "migrate to a new server"
+> "帮我迁移到新设备" / "migrate to a new device"
 
 The agent will:
-1. Ask for new server SSH info
+1. Ask for new device SSH info
 2. Run `pack.sh` to bundle everything
-3. `scp` the pack to the new server
-4. Guide you through 2 commands on the new server
+3. `scp` the pack to the new device
+4. Guide you through 2 commands on the new device
 
-> ⚠️ **Discord Bot note**: The same Bot Token can't run on two servers simultaneously. The agent will stop the old server right before the new one starts, causing ~5 min downtime.
+> ⚠️ **Discord Bot note**: The same Bot Token can't run on two devices simultaneously. The agent will stop the old device right before the new one starts, causing ~5 min downtime.
 
 ## Time Estimate
 
@@ -95,8 +95,8 @@ agent-pack-n-go/
 ├── SKILL.md                    # Skill definition & workflow
 ├── README.md                   # This file
 ├── scripts/
-│   ├── pack.sh                 # Old server: pack everything (10 steps)
-│   ├── setup.sh                # New server: install environment (11 steps)
+│   ├── pack.sh                 # Old device: pack everything (10 steps)
+│   ├── setup.sh                # New device: install environment (11 steps)
 │   └── generate-instructions.sh # Generate Claude Code migration instructions
 └── references/
     ├── migration-guide.md      # Complete migration manual
@@ -115,10 +115,10 @@ MIT
 
 ### 这是什么
 
-一个 OpenClaw Skill，自动化服务器迁移。Agent 在旧服务器打包一切，你在新服务器跑 **2 条命令**，搞定。
+一个 OpenClaw Skill，自动化设备迁移。Agent 在旧设备打包一切，你在新设备跑 **2 条命令**，搞定。
 
 ```
-旧服务器（Agent 自动）              新服务器（你：2 条命令）
+旧设备（Agent 自动）              新设备（你：2 条命令）
 ┌──────────────────────┐          ┌──────────────────────┐
 │ 1. 检查 Claude Code  │          │ 3. bash setup.sh     │
 │ 2. 打包 + scp ───────┼─────────→│ 4. claude "迁移"     │
@@ -135,7 +135,7 @@ MIT
 - **网络三级降级** — 官方源 → Gitee 镜像 → 报错 + 排查指引
 - **npm 超时检测** — 自动切换 npmmirror 国内镜像
 - **安全传输** — 所有敏感数据（API Key、Token、SSH 密钥）走 scp，不经过 GitHub
-- **随时回滚** — 旧服务器数据完整保留，失败可立即回滚
+- **随时回滚** — 旧设备数据完整保留，失败可立即回滚
 
 ### 迁移内容
 
@@ -148,7 +148,7 @@ MIT
 | /etc/hosts | 自定义 DNS 条目（如 Discord CDN） |
 | Dashboard | 可选，如果存在则打包 |
 
-### 新服务器要求
+### 新设备要求
 
 - Ubuntu 22.04 / 24.04
 - 2 核 CPU，2GB+ 内存
@@ -168,15 +168,15 @@ git clone https://github.com/AICodeLion/agent-pack-n-go.git
 
 对你的 OpenClaw Agent 说：
 
-> "帮我迁移到新服务器"
+> "帮我迁移到新设备"
 
 Agent 会：
-1. 询问新服务器 SSH 信息
+1. 询问新设备 SSH 信息
 2. 运行 `pack.sh` 打包一切
-3. `scp` 传输到新服务器
-4. 指导你在新服务器执行 2 条命令
+3. `scp` 传输到新设备
+4. 指导你在新设备执行 2 条命令
 
-> ⚠️ **Discord Bot 注意**：同一个 Bot Token 不能在两台服务器同时运行。Agent 会在新服务器启动前停止旧服务器，期间约 5 分钟离线。
+> ⚠️ **Discord Bot 注意**：同一个 Bot Token 不能在两台设备同时运行。Agent 会在新设备启动前停止旧设备，期间约 5 分钟离线。
 
 ### 时间估算
 

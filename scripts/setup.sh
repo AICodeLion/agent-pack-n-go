@@ -20,7 +20,7 @@ fail() { echo -e " ${RED}❌${NC}"; die "$1"; }
 
 echo ""
 echo "========================================"
-echo "  OpenClaw New Server Setup"
+echo "  OpenClaw New Device Setup"
 echo "========================================"
 echo ""
 
@@ -31,7 +31,7 @@ if [ -f ~/openclaw-migration-pack.sha256 ]; then
     if sha256sum -c openclaw-migration-pack.sha256 --status 2>/dev/null; then
         echo -e " ${GREEN}✅ Pack checksum verified${NC}"
     else
-        fail "Migration pack checksum failed! File may have been corrupted during transfer. Please re-run scp from the old server."
+        fail "Migration pack checksum failed! File may have been corrupted during transfer. Please re-run scp from the old device."
     fi
 else
     echo -e " ${YELLOW}⚠️  Checksum file not found, skipping integrity verification${NC}"
@@ -142,7 +142,7 @@ if [ -f "$PACK_FILE" ]; then
                 echo -ne " 🔒"
             else
                 rm -rf "/tmp/setup-extract-$$"
-                fail "Critical file checksum failed! Migration pack may be corrupted. Please re-pack from the old server."
+                fail "Critical file checksum failed! Migration pack may be corrupted. Please re-pack from the old device."
             fi
             cd ~
         fi

@@ -69,7 +69,7 @@ ping cdn.discordapp.com
 
 **Symptom**: OpenClaw reports `ENOENT: no such file or directory /home/olduser/...`
 
-**Cause**: Username differs between old and new server; absolute paths in `openclaw.json` still point to the old user's home directory
+**Cause**: Username differs between old and new device; absolute paths in `openclaw.json` still point to the old user's home directory
 
 **Solution**:
 ```bash
@@ -159,21 +159,21 @@ openclaw gateway start
 
 **Symptom**: Bot shows as offline in Discord, or messages are heavily delayed or frequently disconnecting
 
-**Cause**: The same Bot Token is running on two servers simultaneously; Discord force-disconnects the old connection, causing frequent reconnects
+**Cause**: The same Bot Token is running on two devices simultaneously; Discord force-disconnects the old connection, causing frequent reconnects
 
 **Solution**:
 ```bash
-# Stop OpenClaw on the old server
+# Stop OpenClaw on the old device
 systemctl --user stop openclaw-gateway
 
-# After confirming the old server is stopped, restart on new server
+# After confirming the old device is stopped, restart on new device
 systemctl --user restart openclaw-gateway
 
 # Verify only one instance is running
-# Check old server:
+# Check old device:
 # systemctl --user status openclaw-gateway  # should show inactive
 ```
-During migration, ensure only one server is running at any given time.
+During migration, ensure only one device is running at any given time.
 
 ---
 

@@ -1,8 +1,8 @@
-# OpenClaw Server Migration Operations Manual (Full Version)
+# OpenClaw Device Migration Operations Manual (Full Version)
 
-> **Goal**: Fully migrate OpenClaw + Claude Code from an old server to a new Ubuntu server
+> **Goal**: Fully migrate OpenClaw + Claude Code from an old device to a new Ubuntu device
 > **Principle**: User performs minimal manual operations; everything else is handled by the Agent
-> **Prerequisite**: Old server already has a running OpenClaw instance
+> **Prerequisite**: Old device already has a running OpenClaw instance
 
 ---
 
@@ -10,8 +10,8 @@
 
 ```
 Phase 1: Pre-migration checks
-Phase 2: Old server preparation (Agent handles)
-Phase 3: New server deployment (User: 2 commands + Claude Code auto)
+Phase 2: Old device preparation (Agent handles)
+Phase 3: New device deployment (User: 2 commands + Claude Code auto)
 Phase 4: Verification + switchover
 Phase 5: Cleanup
 ```
@@ -22,11 +22,11 @@ Phase 5: Cleanup
 |------|----------|-------------|
 | Pre-migration checks | 🦁 Agent | Answer a few questions |
 | Check/install Claude Code | 🦁 Agent | Provide API info (if needed) |
-| Pack + transfer | 🦁 Agent | Provide new server SSH info |
-| New server setup | 👤 User | Run 1 command: `bash ~/setup.sh` |
+| Pack + transfer | 🦁 Agent | Provide new device SSH info |
+| New device setup | 👤 User | Run 1 command: `bash ~/setup.sh` |
 | Install OpenClaw + restore | 🤖 Claude Code | Run 1 command to start Claude Code |
 | Verification | 👤 User | Send test messages |
-| Cleanup | 👤 User | Shut down old server after confirmation |
+| Cleanup | 👤 User | Shut down old device after confirmation |
 
 ---
 
@@ -34,7 +34,7 @@ Phase 5: Cleanup
 
 > Purpose: Confirm migration conditions are met, avoid getting stuck midway
 
-### 1.1 New server requirements
+### 1.1 New device requirements
 
 - [ ] **Operating system**: Ubuntu 22.04 / 24.04 (recommended)
 - [ ] **Resources**: 2-core CPU, 2GB+ RAM
@@ -48,22 +48,22 @@ Phase 5: Cleanup
 
 | Info | Description | Example |
 |------|-------------|---------|
-| New server IP | For SSH login | 1.2.3.4 |
-| SSH username | User on new server | admin / root / ubuntu |
+| New device IP | For SSH login | 1.2.3.4 |
+| SSH username | User on new device | admin / root / ubuntu |
 | SSH password or key | Login credentials | Password or .pem file |
-| API info (if needed) | Claude Code API proxy URL + Key | Only needed if old server lacks Claude Code |
+| API info (if needed) | Claude Code API proxy URL + Key | Only needed if old device lacks Claude Code |
 
 ### 1.3 Important notices
 
-⚠️ **Discord Bot cannot run on two servers simultaneously**
+⚠️ **Discord Bot cannot run on two devices simultaneously**
 - The same Bot Token can only have one active instance
-- You must stop the old server before starting the new one
+- You must stop the old device before starting the new one
 - There will be a brief offline period (~5-10 minutes)
 
 ⚠️ **Sensitive data security**
 - The migration pack contains API Keys, Bot Tokens, and other sensitive data
 - Transfer uses scp (encrypted channel), not public channels
-- Clean up migration pack files on the new server after migration
+- Clean up migration pack files on the new device after migration
 
 ---
 
@@ -147,7 +147,7 @@ Agent automatically creates a migration pack containing:
 
 Agent automatically generates two key files:
 
-**① `setup.sh` — One-click install script for new server**
+**① `setup.sh` — One-click install script for new device**
 
 Functions:
 - Install nvm + Node.js 22
@@ -162,29 +162,29 @@ Functions:
 
 Contents: All migration steps Claude Code needs to execute (see Phase 3)
 
-### 2.4 Transfer to new server
+### 2.4 Transfer to new device
 
-After user provides new server SSH info, Agent runs:
+After user provides new device SSH info, Agent runs:
 
 ```bash
 scp ~/openclaw-migration-pack.tar.gz \
     ~/setup.sh \
     ~/migration-instructions.md \
-    username@new-server-ip:~/
+    username@new-device-ip:~/
 ```
 
-> 👤 User action: Provide new server IP + SSH username + password/key
+> 👤 User action: Provide new device IP + SSH username + password/key
 
-### 2.5 Stop old server OpenClaw
+### 2.5 Stop old device OpenClaw
 
-⚠️ **Important**: Stop the old server before starting the new one to avoid Discord Bot conflicts
+⚠️ **Important**: Stop the old device before starting the new one to avoid Discord Bot conflicts
 
 ```bash
 # Agent runs this after confirming file transfer is complete
 systemctl --user stop openclaw-gateway
 ```
 
-Agent will tell user: "Old server stopped. Please run setup.sh on the new server."
+Agent will tell user: "Old device stopped. Please run setup.sh on the new device."
 
 
 ---
@@ -193,7 +193,7 @@ Agent will tell user: "Old server stopped. Please run setup.sh on the new server
 
 ### Step 1: Run setup script 👤
 
-SSH to the new server and run one command:
+SSH to the new device and run one command:
 
 ```bash
 bash ~/setup.sh
@@ -247,10 +247,10 @@ cp -r ~/migration-tmp/openclaw-config/* ~/.openclaw/
 
 #### 3.3 Fix paths
 
-Check new server username; if different from old server:
+Check new device username; if different from old device:
 
 ```bash
-OLD_USER="admin"  # Old server username
+OLD_USER="admin"  # Old device username
 NEW_USER=$(whoami)
 
 if [ "$OLD_USER" != "$NEW_USER" ]; then
@@ -265,7 +265,7 @@ fi
 #### 3.4 Restore system config
 
 ```bash
-# /etc/hosts — Discord CDN resolution (needed for China servers)
+# /etc/hosts — Discord CDN resolution (needed for China-based devices)
 sudo tee -a /etc/hosts < ~/migration-tmp/hosts-custom.txt
 
 # crontab — restore scheduled tasks
@@ -279,7 +279,7 @@ sudo apt install -y proxychains4
 #### 3.5 Deploy proxy service
 
 > For services that need a proxy (Discord, etc.)
-> Claude Code will deploy the same proxy setup as the old server based on its config
+> Claude Code will deploy the same proxy setup as the old device based on its config
 
 ```bash
 # Install proxy software
@@ -368,14 +368,14 @@ rm ~/setup.sh
 
 ### 4.3 What to do if verification fails
 
-**Rollback plan**: Restart OpenClaw on the old server
+**Rollback plan**: Restart OpenClaw on the old device
 
 ```bash
-# On old server
+# On old device
 systemctl --user start openclaw-gateway
 ```
 
-The old server's data is completely untouched and can be rolled back at any time.
+The old device's data is completely untouched and can be rolled back at any time.
 
 ---
 
@@ -383,30 +383,30 @@ The old server's data is completely untouched and can be rolled back at any time
 
 ### 5.1 Observation period
 
-- Run new server for **3-7 days** to confirm stability
+- Run new device for **3-7 days** to confirm stability
 - Watch for:
   - Occasional channel message loss
   - All scheduled tasks triggering correctly
   - Normal memory/CPU usage
   - Any unusual errors in logs
 
-### 5.2 Shut down old server
+### 5.2 Shut down old device
 
 After confirming stability:
 
 ```bash
-# On old server
+# On old device
 systemctl --user stop openclaw-gateway
 systemctl --user disable openclaw-gateway
 
-# Optional: clean up migration pack from old server
+# Optional: clean up migration pack from old device
 rm ~/openclaw-migration-pack.tar.gz
 ```
 
 ### 5.3 Update records
 
 - Update MEMORY.md to record the migration event
-- Update server info in TOOLS.md (new IP, etc.)
+- Update device info in TOOLS.md (new IP, etc.)
 - If Dashboard is present, update security group/firewall rules
 
 ---
@@ -418,11 +418,11 @@ rm ~/openclaw-migration-pack.tar.gz
 | Anthropic API 403 | Anthropic blocks direct China IP connections | Use a third-party API proxy (change baseUrl) |
 | Claude Code fails to start | npm install overwrote the nvm wrapper | Rebuild the bash wrapper script |
 | Discord images fail to load | CDN DNS resolution failure | Add Discord CDN static entries to /etc/hosts |
-| workspace path errors | Different username on old/new server | Use sed to bulk-replace paths in openclaw.json |
+| workspace path errors | Different username on old/new device | Use sed to bulk-replace paths in openclaw.json |
 | git push fails | SSH key permissions wrong | `chmod 600 ~/.ssh/id_ed25519` |
 | Service dies after SSH logout | systemd user session terminated | `sudo loginctl enable-linger $USER` |
 | OpenClaw port already in use | Old process not cleaned up | Kill old process or change port in openclaw.json |
-| Discord Bot offline | Same token running on two servers | Ensure old server is stopped before starting new one |
+| Discord Bot offline | Same token running on two devices | Ensure old device is stopped before starting new one |
 | npm install timeout | China network access to npm is slow | Set npmmirror: `npm config set registry https://registry.npmmirror.com` |
 | Wrong Node.js version | System's old version used instead of nvm's | Confirm `nvm use 22`, check `node -v` |
 | setup.sh permission denied | Script lacks execute permission | Use `chmod +x ~/setup.sh` or run with `bash ~/setup.sh` |
@@ -437,7 +437,7 @@ rm ~/openclaw-migration-pack.tar.gz
 | Pre-migration checks | 2 min | 👤 Answer questions |
 | Agent check/install Claude Code | 0-5 min | 🦁 Automatic |
 | Agent pack + scp | 5 min | 🦁 Automatic |
-| New server `bash setup.sh` | 5 min | 👤 1 command |
+| New device `bash setup.sh` | 5 min | 👤 1 command |
 | Claude Code auto migration | 10-15 min | 🤖 Automatic |
 | Verification | 5 min | 👤 |
 | **Total** | **~30 minutes** | |
