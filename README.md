@@ -1,6 +1,10 @@
 # agent-pack-n-go 📦🚀
 
-**Migrate your OpenClaw + Claude Code to a new device in minutes, not hours.**
+**OpenClaw Migration — Package Your Agent and Go**
+
+Seamlessly migrate your Agent with just two commands: one to package everything (configs, tools, state, dependencies), and one to deploy and fully restore the environment anywhere. No manual exports or complex setup—just **Package → Deploy → Done**.
+
+All sensitive data (API keys, tokens, SSH keys) transferred via encrypted `scp` with SHA256 integrity verification. Your secrets never touch GitHub.
 
 [中文版](#中文) | [English](#english)
 
@@ -10,27 +14,26 @@
 
 ## What It Does
 
-An OpenClaw Skill that automates device migration. Your agent packs everything on the old device, you run **2 commands** on the new device, and you're done.
+An OpenClaw Skill that automates full agent migration. Your agent packs everything on the old device, you run **2 commands** on the new device, and your agent is back online — configs, memory, skills, credentials, all intact.
 
 ```
 Old Device (Agent auto)           New Device (You: 2 commands)
 ┌──────────────────────┐          ┌──────────────────────┐
 │ 1. Check Claude Code │          │ 3. bash setup.sh     │
 │ 2. Pack + scp ───────┼─────────→│ 4. claude "migrate"  │
-│    (stop old)        │          │    (auto completes)  │
-└──────────────────────┘          └──────────────────────┘
+│                      │   🔒     │    (auto completes)  │
+└──────────────────────┘  SHA256  └──────────────────────┘
                                            ↓
                                   Verify & done ✅
 ```
 
 ## Features
 
-- **Minimal manual steps** — Agent handles packing, you run 2 commands
-- **SHA256 integrity verification** — Both whole-pack and per-file checksums
-- **Network fallback** — Official source → Gitee mirror → error with guidance
-- **npm timeout detection** — Auto-switches to npmmirror if npm is slow
-- **Safe transfer** — All sensitive data (API keys, tokens, SSH keys) via scp, never GitHub
-- **Rollback ready** — Old device untouched, restart anytime if something fails
+- 📦 **Two commands, full migration** — Pack on old device, deploy on new device, done
+- 🔒 **Secure by design** — All secrets via encrypted `scp`, SHA256 checksums for integrity
+- 🌐 **Network-resilient** — Official source → Gitee mirror → error with guidance
+- ⏱️ **npm timeout detection** — Auto-switches to npmmirror if npm is slow
+- ♻️ **Rollback ready** — Old device untouched, restart anytime if something fails
 
 ## What Gets Migrated
 
@@ -115,27 +118,28 @@ MIT
 
 ### 这是什么
 
-一个 OpenClaw Skill，自动化设备迁移。Agent 在旧设备打包一切，你在新设备跑 **2 条命令**，搞定。
+OpenClaw 一键迁移工具。两条命令，把你的 Agent 完整搬到任何新设备上——配置、工具、状态、记忆、密钥，全部自动恢复。
+
+所有敏感数据通过加密 `scp` 传输，SHA256 完整性校验，密钥永远不经过 GitHub。
 
 ```
 旧设备（Agent 自动）              新设备（你：2 条命令）
 ┌──────────────────────┐          ┌──────────────────────┐
 │ 1. 检查 Claude Code  │          │ 3. bash setup.sh     │
 │ 2. 打包 + scp ───────┼─────────→│ 4. claude "迁移"     │
-│    (停旧服务)        │          │    (自动完成)        │
-└──────────────────────┘          └──────────────────────┘
+│                      │   🔒     │    (自动完成)        │
+└──────────────────────┘  SHA256  └──────────────────────┘
                                            ↓
                                   验证通过 ✅
 ```
 
 ### 特性
 
-- **最少手动操作** — Agent 处理打包，你只跑 2 条命令
-- **SHA256 完整性校验** — 整包校验 + 关键文件逐一校验
-- **网络三级降级** — 官方源 → Gitee 镜像 → 报错 + 排查指引
-- **npm 超时检测** — 自动切换 npmmirror 国内镜像
-- **安全传输** — 所有敏感数据（API Key、Token、SSH 密钥）走 scp，不经过 GitHub
-- **随时回滚** — 旧设备数据完整保留，失败可立即回滚
+- 📦 **两条命令，完整迁移** — 旧设备打包，新设备部署，搞定
+- 🔒 **安全至上** — 敏感数据走加密 scp，SHA256 完整性校验
+- 🌐 **网络自适应** — 官方源 → Gitee 镜像 → 报错 + 排查指引
+- ⏱️ **npm 超时检测** — 自动切换 npmmirror 国内镜像
+- ♻️ **随时回滚** — 旧设备数据完整保留，失败可立即回滚
 
 ### 迁移内容
 
