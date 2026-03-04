@@ -72,11 +72,12 @@ Tell your OpenClaw agent:
 
 > "帮我迁移到新设备" / "migrate to a new device"
 
-The agent will:
-1. Ask for new device SSH info
-2. Run `pack.sh` to bundle everything
-3. `scp` the pack to the new device
-4. Guide you through one-click deployment on the new device
+**What happens next:**
+
+1. 🔍 **Pre-flight check** — Agent asks for new device SSH info (IP, username, password/key) and verifies requirements
+2. 📦 **Pack** — Agent runs `pack.sh` to bundle configs, credentials, workspace, skills, memory, SSH keys, crontab, and more into an encrypted migration pack with SHA256 checksums
+3. 📡 **Transfer** — Agent `scp`s the pack to your new device (encrypted channel, secrets never touch GitHub)
+4. 🚀 **Deploy** — You SSH into the new device and run `bash ~/setup.sh` — it installs the environment, verifies integrity, and hands off to Claude Code which auto-completes the full migration
 
 > ⚠️ **Discord Bot note**: The same Bot Token can't run on two devices simultaneously. The agent will stop the old device right before the new one starts, causing ~5 min downtime.
 
@@ -174,11 +175,12 @@ git clone https://github.com/AICodeLion/agent-pack-n-go.git
 
 > "帮我迁移到新设备"
 
-Agent 会：
-1. 询问新设备 SSH 信息
-2. 运行 `pack.sh` 打包一切
-3. `scp` 传输到新设备
-4. 指导你在新设备一键部署
+**接下来会发生什么：**
+
+1. 🔍 **迁移前检查** — Agent 询问新设备 SSH 信息（IP、用户名、密码/密钥），确认环境满足要求
+2. 📦 **打包** — Agent 运行 `pack.sh`，将配置、凭证、工作区、技能、记忆、SSH 密钥、定时任务等打成加密迁移包，附带 SHA256 校验
+3. 📡 **传输** — Agent 通过 `scp` 加密传输到新设备（密钥不经过 GitHub）
+4. 🚀 **部署** — 你 SSH 登录新设备，运行 `bash ~/setup.sh` — 自动安装环境、校验完整性，然后交给 Claude Code 自动完成全部迁移
 
 > ⚠️ **Discord Bot 注意**：同一个 Bot Token 不能在两台设备同时运行。Agent 会在新设备启动前停止旧设备，期间约 5 分钟离线。
 
