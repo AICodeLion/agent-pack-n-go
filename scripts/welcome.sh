@@ -2,16 +2,32 @@
 # Post-install welcome message for agent-pack-n-go
 
 cat << 'EOF'
-✅ agent-pack-n-go installed successfully!
 
-📦 This skill migrates your entire OpenClaw agent to a new Linux device:
-   - Configs, memory, skills, credentials — everything transfers seamlessly
-   - All sensitive data via encrypted scp (never touches GitHub)
-   - SHA256 integrity verification
+  ╔══════════════════════════════════════════════════════════╗
+  ║           📦 agent-pack-n-go installed! 🚀              ║
+  ╚══════════════════════════════════════════════════════════╝
 
-🚀 To start a migration, just say:
-   - "帮我迁移到新设备"
-   - "migrate to a new device"
+  Your Agent migration toolkit is ready.
 
-📖 Full docs: https://github.com/AICodeLion/agent-pack-n-go
+  ┌─ What it does ──────────────────────────────────────────┐
+  │                                                         │
+  │  Migrate your entire OpenClaw agent to a new device:    │
+  │                                                         │
+  │  ✦ Configs, memory, skills, credentials                 │
+  │  ✦ Encrypted scp transfer (secrets never touch GitHub)  │
+  │  ✦ SHA256 integrity verification                        │
+  │                                                         │
+  └─────────────────────────────────────────────────────────┘
+
+  ┌─ How to start ──────────────────────────────────────────┐
+  │                                                         │
+  │  Just say:                                              │
+  │                                                         │
+  │    🇨🇳  "帮我迁移到新设备"                                │
+  │    🇺🇸  "migrate to a new device"                       │
+  │                                                         │
+  └─────────────────────────────────────────────────────────┘
+
+  📖 Docs: https://github.com/AICodeLion/agent-pack-n-go
+
 EOF
