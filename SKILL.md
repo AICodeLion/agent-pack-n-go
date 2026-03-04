@@ -68,7 +68,7 @@ See `scripts/pack.sh` for details.
 #### 2.3 Transfer to new server
 
 ```bash
-scp ~/openclaw-migration-pack.tar.gz ~/setup.sh ~/migration-instructions.md USER@NEW_IP:~/
+scp ~/openclaw-migration-pack.tar.gz ~/openclaw-migration-pack.sha256 ~/setup.sh ~/migration-instructions.md USER@NEW_IP:~/
 ```
 
 #### 2.4 Stop old server

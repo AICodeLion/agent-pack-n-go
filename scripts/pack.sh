@@ -9,7 +9,7 @@ NC='\033[0m'
 
 PACK_FILE=~/openclaw-migration-pack.tar.gz
 TMP_DIR=~/openclaw-migration-tmp
-TOTAL=8
+TOTAL=10
 
 echo ""
 echo "========================================"
@@ -98,15 +98,39 @@ echo -n "[${step}/${TOTAL}] 记录旧服务器用户名..."
 whoami > "$TMP_DIR/old_user.txt"
 echo -e " ${GREEN}✅ ($(cat "$TMP_DIR/old_user.txt"))${NC}"
 
-# ─── [8/8] Create tarball ────────────────────────────────────────────────────
+# ─── [8/10] Generate manifest checksum ───────────────────────────────────────
+step=$((step+1))
+echo -n "[${step}/${TOTAL}] 生成关键文件校验清单 (manifest.sha256)..."
+cd "$TMP_DIR"
+MANIFEST_FILES=""
+for f in openclaw-config/openclaw.json claude-config/settings.json ssh-keys/id_ed25519 crontab-backup.txt; do
+    if [ -f "$f" ]; then
+        MANIFEST_FILES="$MANIFEST_FILES $f"
+    fi
+done
+if [ -n "$MANIFEST_FILES" ]; then
+    sha256sum $MANIFEST_FILES > manifest.sha256
+    echo -e " ${GREEN}✅ ($(wc -l < manifest.sha256) 个文件)${NC}"
+else
+    echo "# no critical files found" > manifest.sha256
+    echo -e " ${YELLOW}⚠️  未找到关键文件${NC}"
+fi
+cd ~
+
+# ─── [9/10] Create tarball ───────────────────────────────────────────────────
 step=$((step+1))
 echo -n "[${step}/${TOTAL}] 打包成 openclaw-migration-pack.tar.gz..."
-cd ~
 tar czf "$PACK_FILE" -C "$TMP_DIR" .
 echo -e " ${GREEN}✅${NC}"
 
 # Clean up tmp
 rm -rf "$TMP_DIR"
+
+# ─── [10/10] Generate pack checksum ─────────────────────────────────────────
+step=$((step+1))
+echo -n "[${step}/${TOTAL}] 生成整包 SHA256 校验..."
+sha256sum "$PACK_FILE" > ~/openclaw-migration-pack.sha256
+echo -e " ${GREEN}✅${NC}"
 
 PACK_SIZE=$(du -sh "$PACK_FILE" | cut -f1)
 echo ""
@@ -116,6 +140,7 @@ echo -e "========================================${NC}"
 echo ""
 echo "  文件：$PACK_FILE"
 echo "  大小：$PACK_SIZE"
+echo "  校验：~/openclaw-migration-pack.sha256"
 echo ""
 
 # Copy scripts to home for transfer
@@ -132,5 +157,5 @@ echo -e " ${GREEN}✅${NC}"
 
 echo ""
 echo -e "${GREEN}下一步：将以下文件 scp 到新服务器：${NC}"
-echo "  scp ~/openclaw-migration-pack.tar.gz ~/setup.sh ~/migration-instructions.md USER@NEW_IP:~/"
+echo "  scp ~/openclaw-migration-pack.tar.gz ~/openclaw-migration-pack.sha256 ~/setup.sh ~/migration-instructions.md USER@NEW_IP:~/"
 echo ""
