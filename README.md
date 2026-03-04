@@ -2,9 +2,9 @@
 
 **OpenClaw Migration — Package Your Agent and Go**
 
-Your agent isn't just software — it's months of fine-tuned configs, accumulated memories, learned preferences, and carefully installed skills. Starting over on a new device? That shouldn't mean losing everything you've built together.
+Your agent isn't just software — it's your partner. Months of fine-tuned configs, accumulated memories, learned preferences, and carefully installed skills make it uniquely yours. Starting over on a new device? That shouldn't mean losing the partner you've built together.
 
-**agent-pack-n-go** lets you move your entire agent to a new device with one-click packaging and one-click deployment. Configs, tools, memory, credentials — everything transfers seamlessly. **Package → Deploy → Done.**
+**agent-pack-n-go** lets you take your partner anywhere — one-click packaging, one-click deployment. Configs, tools, memory, credentials — everything transfers seamlessly. **Package → Deploy → Done.**
 
 ### 🎯 When You Need This
 
@@ -134,9 +134,9 @@ MIT
 
 ### 这是什么
 
-你的 Agent 不只是一堆代码——它是你花了几个月调教出来的配置、积累的记忆、学会的偏好、精心安装的技能。换台新设备，不应该意味着从零开始。
+你的 Agent 不只是一堆代码——它是你的伙伴。几个月的调教配置、积累的记忆、学会的偏好、精心安装的技能，让它成为独一无二的存在。换台新设备，不应该意味着和这个伙伴说再见。
 
-**agent-pack-n-go** 让你一键打包、一键部署，把你的 Agent 完整搬到新设备上。配置、工具、状态、记忆、密钥，全部无缝迁移。**打包 → 部署 → 搞定。**
+**agent-pack-n-go** 让你带着伙伴一起走——一键打包、一键部署。配置、工具、状态、记忆、密钥，全部无缝迁移。**打包 → 部署 → 搞定。**
 
 ### 🎯 什么时候用
 
