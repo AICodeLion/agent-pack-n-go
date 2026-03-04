@@ -2,7 +2,18 @@
 
 **OpenClaw Migration — Package Your Agent and Go**
 
-Seamlessly migrate your Agent with one-click packaging and one-click deployment — configs, tools, state, dependencies, all migrated automatically. No manual exports or complex setup—just **Package → Deploy → Done**.
+Your agent isn't just software — it's months of fine-tuned configs, accumulated memories, learned preferences, and carefully installed skills. Starting over on a new device? That shouldn't mean losing everything you've built together.
+
+**agent-pack-n-go** lets you move your entire agent to a new device with one-click packaging and one-click deployment. Configs, tools, memory, credentials — everything transfers seamlessly. **Package → Deploy → Done.**
+
+### 🎯 When You Need This
+
+- 🖥️ **Upgrading your server** — Moving to a faster machine without rebuilding from scratch
+- 🔄 **Cloning your agent** — Replicate a well-tuned agent to another device
+- 💾 **Disaster recovery** — Your device died, but you have backups? Restore in minutes
+- 🏠 **Lab to production** — Tested locally, now deploy to a cloud server
+
+### 🔒 Security First
 
 All sensitive data (API keys, Discord bot tokens, Feishu AppSecret, SSH private keys, OAuth credentials) transferred via encrypted `scp` with SHA256 integrity verification. Your secrets never touch GitHub.
 
@@ -123,7 +134,18 @@ MIT
 
 ### 这是什么
 
-OpenClaw 一键迁移工具。一键打包、一键部署，把你的 Agent 完整搬到新设备上——配置、工具、状态、记忆、密钥，全部自动恢复。
+你的 Agent 不只是一堆代码——它是你花了几个月调教出来的配置、积累的记忆、学会的偏好、精心安装的技能。换台新设备，不应该意味着从零开始。
+
+**agent-pack-n-go** 让你一键打包、一键部署，把你的 Agent 完整搬到新设备上。配置、工具、状态、记忆、密钥，全部无缝迁移。**打包 → 部署 → 搞定。**
+
+### 🎯 什么时候用
+
+- 🖥️ **升级设备** — 换更快的机器，不用从头配置
+- 🔄 **克隆 Agent** — 把调教好的 Agent 复制到另一台设备
+- 💾 **灾难恢复** — 设备挂了？有备份就能分钟级恢复
+- 🏠 **本地到云端** — 本地测试好了，一键部署到云服务器
+
+### 🔒 安全第一
 
 所有敏感数据（API Key、Discord Bot Token、飞书 AppSecret、SSH 私钥、OAuth 凭证）通过加密 `scp` 传输，SHA256 完整性校验，密钥永远不经过 GitHub。
 
