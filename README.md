@@ -118,7 +118,7 @@ MIT
 
 ### 这是什么
 
-OpenClaw 一键迁移工具。一键打包、一键部署，把你的 Agent 完整搬到任何新设备上——配置、工具、状态、记忆、密钥，全部自动恢复。
+OpenClaw 一键迁移工具。一键打包、一键部署，把你的 Agent 完整搬到新设备上——配置、工具、状态、记忆、密钥，全部自动恢复。
 
 所有敏感数据（API Key、Discord Bot Token、飞书 AppSecret、SSH 私钥、OAuth 凭证）通过加密 `scp` 传输，SHA256 完整性校验，密钥永远不经过 GitHub。
 
