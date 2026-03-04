@@ -2,9 +2,9 @@
 
 **OpenClaw Migration — Package Your Agent and Go**
 
-Your agent isn't just software — it's your partner. Months of fine-tuned configs, accumulated memories, learned preferences, and carefully installed skills make it uniquely yours. Starting over on a new device? That shouldn't mean losing the partner you've built together.
+Your Agent isn't just a bundle of code — it's your companion. Months of fine-tuning, evolving memory, learned preferences, and carefully crafted capabilities make it uniquely yours. Moving to a new machine shouldn't mean starting over.
 
-**agent-pack-n-go** lets you take your partner anywhere — one-click packaging, one-click deployment. Configs, tools, memory, credentials — everything transfers seamlessly. **Package → Deploy → Done.**
+**agent-pack-n-go** lets you take your companion with you. One command to package, one command to deploy. Configurations, tools, state, memory, and keys migrate seamlessly — exactly as you left them. **Package → Deploy → Done.**
 
 ### 🎯 When You Need This
 
