@@ -92,6 +92,8 @@ git clone https://github.com/AICodeLion/agent-pack-n-go.git
 
 Or tell your agent: *"Install agent-pack-n-go from https://github.com/AICodeLion/agent-pack-n-go"*
 
+Once installed, just say: **"帮我迁移到新设备"** or **"migrate to a new device"** to start.
+
 ## ⏱️ Time Estimate
 
 | Step | Duration | Who |
@@ -208,6 +210,8 @@ git clone https://github.com/AICodeLion/agent-pack-n-go.git
 ```
 
 或者告诉你的 Agent：*"帮我安装 agent-pack-n-go skill，地址 https://github.com/AICodeLion/agent-pack-n-go"*
+
+安装完成后，对 Agent 说：**"帮我迁移到新设备"** 即可启动迁移。
 
 ### ⏱️ 时间估算
 
