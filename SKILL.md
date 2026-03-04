@@ -99,7 +99,7 @@ After Claude Code finishes, tell user to verify:
 
 1. Send a message in Discord → should get reply
 2. Send a message in Feishu → should get reply
-3. Check memory: ask agent "你记得我是谁吗"
+3. Check memory: ask agent "do you remember who I am"
 4. Check crontab: `crontab -l`
 
 If verification fails → **rollback**: restart old server's OpenClaw:

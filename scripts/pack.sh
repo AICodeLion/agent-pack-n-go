@@ -25,7 +25,7 @@ step=0
 
 # ─── [1/8] Pack ~/.openclaw/ ─────────────────────────────────────────────────
 step=$((step+1))
-echo -n "[${step}/${TOTAL}] 打包 ~/.openclaw/ 配置..."
+echo -n "[${step}/${TOTAL}] Packing ~/.openclaw/ config..."
 OPENCLAW_DIR=~/.openclaw
 if [ -d "$OPENCLAW_DIR" ]; then
     for item in openclaw.json credentials skills extensions memory feishu \
@@ -38,69 +38,69 @@ if [ -d "$OPENCLAW_DIR" ]; then
     done
     echo -e " ${GREEN}✅${NC}"
 else
-    echo -e " ${YELLOW}⚠️  ~/.openclaw/ 不存在，跳过${NC}"
+    echo -e " ${YELLOW}⚠️  ~/.openclaw/ not found, skipping${NC}"
 fi
 
 # ─── [2/8] Pack ~/.claude/ ───────────────────────────────────────────────────
 step=$((step+1))
-echo -n "[${step}/${TOTAL}] 打包 ~/.claude/ (Claude Code 配置)..."
+echo -n "[${step}/${TOTAL}] Packing ~/.claude/ (Claude Code config)..."
 if [ -d ~/.claude ]; then
     cp -r ~/.claude/. "$TMP_DIR/claude-config/"
     echo -e " ${GREEN}✅${NC}"
 else
-    echo -e " ${YELLOW}⚠️  ~/.claude/ 不存在，跳过${NC}"
+    echo -e " ${YELLOW}⚠️  ~/.claude/ not found, skipping${NC}"
 fi
 
 # ─── [3/8] Pack ~/.ssh/ ──────────────────────────────────────────────────────
 step=$((step+1))
-echo -n "[${step}/${TOTAL}] 打包 ~/.ssh/ (SSH 密钥)..."
+echo -n "[${step}/${TOTAL}] Packing ~/.ssh/ (SSH keys)..."
 if [ -d ~/.ssh ]; then
     cp -r ~/.ssh/. "$TMP_DIR/ssh-keys/"
     echo -e " ${GREEN}✅${NC}"
 else
-    echo -e " ${YELLOW}⚠️  ~/.ssh/ 不存在，跳过${NC}"
+    echo -e " ${YELLOW}⚠️  ~/.ssh/ not found, skipping${NC}"
 fi
 
 # ─── [4/8] Export crontab ────────────────────────────────────────────────────
 step=$((step+1))
-echo -n "[${step}/${TOTAL}] 导出 crontab..."
+echo -n "[${step}/${TOTAL}] Exporting crontab..."
 if crontab -l > "$TMP_DIR/crontab-backup.txt" 2>/dev/null; then
     echo -e " ${GREEN}✅${NC}"
 else
     echo "# no crontab" > "$TMP_DIR/crontab-backup.txt"
-    echo -e " ${YELLOW}⚠️  crontab 为空，已创建空文件${NC}"
+    echo -e " ${YELLOW}⚠️  crontab is empty, created empty file${NC}"
 fi
 
 # ─── [5/8] Export /etc/hosts custom entries ──────────────────────────────────
 step=$((step+1))
-echo -n "[${step}/${TOTAL}] 导出 /etc/hosts 自定义条目 (discord|cdn)..."
+echo -n "[${step}/${TOTAL}] Exporting /etc/hosts custom entries (discord|cdn)..."
 grep -Ei 'discord|cdn' /etc/hosts > "$TMP_DIR/hosts-custom.txt" 2>/dev/null || true
 if [ -s "$TMP_DIR/hosts-custom.txt" ]; then
     echo -e " ${GREEN}✅${NC}"
 else
     echo "# no custom entries" > "$TMP_DIR/hosts-custom.txt"
-    echo -e " ${YELLOW}⚠️  未找到 discord/cdn 相关条目，已创建空文件${NC}"
+    echo -e " ${YELLOW}⚠️  No discord/cdn entries found, created empty file${NC}"
 fi
 
 # ─── [6/8] Pack Dashboard (optional) ────────────────────────────────────────
 step=$((step+1))
-echo -n "[${step}/${TOTAL}] 检查 ~/openclaw-dashboard/..."
+echo -n "[${step}/${TOTAL}] Checking ~/openclaw-dashboard/..."
 if [ -d ~/openclaw-dashboard ]; then
     cp -r ~/openclaw-dashboard "$TMP_DIR/dashboard"
-    echo -e " ${GREEN}✅ 已打包${NC}"
+    echo -e " ${GREEN}✅ Packed${NC}"
 else
-    echo -e " ${YELLOW}⚠️  ~/openclaw-dashboard/ 不存在，跳过${NC}"
+    echo -e " ${YELLOW}⚠️  ~/openclaw-dashboard/ not found, skipping${NC}"
 fi
 
 # ─── [7/8] Record old username ───────────────────────────────────────────────
 step=$((step+1))
-echo -n "[${step}/${TOTAL}] 记录旧服务器用户名..."
+echo -n "[${step}/${TOTAL}] Recording old server username..."
 whoami > "$TMP_DIR/old_user.txt"
 echo -e " ${GREEN}✅ ($(cat "$TMP_DIR/old_user.txt"))${NC}"
 
 # ─── [8/10] Generate manifest checksum ───────────────────────────────────────
 step=$((step+1))
-echo -n "[${step}/${TOTAL}] 生成关键文件校验清单 (manifest.sha256)..."
+echo -n "[${step}/${TOTAL}] Generating critical file checksums (manifest.sha256)..."
 cd "$TMP_DIR"
 MANIFEST_FILES=""
 for f in openclaw-config/openclaw.json claude-config/settings.json ssh-keys/id_ed25519 crontab-backup.txt; do
@@ -110,16 +110,16 @@ for f in openclaw-config/openclaw.json claude-config/settings.json ssh-keys/id_e
 done
 if [ -n "$MANIFEST_FILES" ]; then
     sha256sum $MANIFEST_FILES > manifest.sha256
-    echo -e " ${GREEN}✅ ($(wc -l < manifest.sha256) 个文件)${NC}"
+    echo -e " ${GREEN}✅ ($(wc -l < manifest.sha256) files)${NC}"
 else
     echo "# no critical files found" > manifest.sha256
-    echo -e " ${YELLOW}⚠️  未找到关键文件${NC}"
+    echo -e " ${YELLOW}⚠️  No critical files found${NC}"
 fi
 cd ~
 
 # ─── [9/10] Create tarball ───────────────────────────────────────────────────
 step=$((step+1))
-echo -n "[${step}/${TOTAL}] 打包成 openclaw-migration-pack.tar.gz..."
+echo -n "[${step}/${TOTAL}] Creating openclaw-migration-pack.tar.gz..."
 tar czf "$PACK_FILE" -C "$TMP_DIR" .
 echo -e " ${GREEN}✅${NC}"
 
@@ -128,34 +128,34 @@ rm -rf "$TMP_DIR"
 
 # ─── [10/10] Generate pack checksum ─────────────────────────────────────────
 step=$((step+1))
-echo -n "[${step}/${TOTAL}] 生成整包 SHA256 校验..."
+echo -n "[${step}/${TOTAL}] Generating pack SHA256 checksum..."
 sha256sum "$PACK_FILE" > ~/openclaw-migration-pack.sha256
 echo -e " ${GREEN}✅${NC}"
 
 PACK_SIZE=$(du -sh "$PACK_FILE" | cut -f1)
 echo ""
 echo -e "${GREEN}========================================"
-echo -e "  打包完成！"
+echo -e "  Packing complete!"
 echo -e "========================================${NC}"
 echo ""
-echo "  文件：$PACK_FILE"
-echo "  大小：$PACK_SIZE"
-echo "  校验：~/openclaw-migration-pack.sha256"
+echo "  File: $PACK_FILE"
+echo "  Size: $PACK_SIZE"
+echo "  Checksum: ~/openclaw-migration-pack.sha256"
 echo ""
 
 # Copy scripts to home for transfer
 cp "$(dirname "$0")/setup.sh" ~/setup.sh
 chmod +x ~/setup.sh
-echo -e "${GREEN}✅ setup.sh 已复制到 ~/setup.sh${NC}"
+echo -e "${GREEN}✅ setup.sh copied to ~/setup.sh${NC}"
 
 # Generate migration instructions
 echo ""
-echo -n "生成 migration-instructions.md..."
+echo -n "Generating migration-instructions.md..."
 OLD_USER=$(whoami)
 bash "$(dirname "$0")/generate-instructions.sh" "$OLD_USER"
 echo -e " ${GREEN}✅${NC}"
 
 echo ""
-echo -e "${GREEN}下一步：将以下文件 scp 到新服务器：${NC}"
+echo -e "${GREEN}Next: scp these files to the new server:${NC}"
 echo "  scp ~/openclaw-migration-pack.tar.gz ~/openclaw-migration-pack.sha256 ~/setup.sh ~/migration-instructions.md USER@NEW_IP:~/"
 echo ""

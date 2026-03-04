@@ -1,33 +1,33 @@
-# 常见问题排查表
+# Troubleshooting Guide
 
-## 1. Anthropic API 返回 403
+## 1. Anthropic API returns 403
 
-**现象**：`claude` 命令报错 403 Forbidden，或消息无响应
+**Symptom**: `claude` command reports 403 Forbidden, or messages get no response
 
-**原因**：Anthropic 封锁了国内 IP 直连
+**Cause**: Anthropic blocks direct connections from China IPs
 
-**解决方案**：
+**Solution**:
 ```bash
-# 使用第三方 API 代理，修改 ~/.claude/settings.json
-# 将 apiBaseUrl 改为代理地址
+# Use a third-party API proxy, modify ~/.claude/settings.json
+# Change apiBaseUrl to your proxy address
 {
   "apiBaseUrl": "https://your-api-proxy.example.com",
   "apiKey": "sk-..."
 }
 ```
-不要直连 `api.anthropic.com`，换用支持国内访问的代理服务。
+Do not connect directly to `api.anthropic.com`; use a proxy service that supports access from China.
 
 ---
 
-## 2. Claude Code 启动失败（nvm wrapper 被覆盖）
+## 2. Claude Code fails to start (nvm wrapper overwritten)
 
-**现象**：`claude` 命令报错 `node: not found` 或 `bad interpreter`，或使用了系统旧版 Node
+**Symptom**: `claude` command reports `node: not found` or `bad interpreter`, or uses system's old Node version
 
-**原因**：`npm install -g` 重新安装 Claude Code 时覆盖了 nvm wrapper，导致 claude 直接调用系统 node 而非 nvm 管理的 Node 22
+**Cause**: `npm install -g` reinstalling Claude Code overwrote the nvm wrapper, causing claude to call the system node instead of nvm-managed Node 22
 
-**解决方案**：
+**Solution**:
 ```bash
-# 重建 nvm wrapper
+# Rebuild the nvm wrapper
 cat > ~/.npm-global/bin/claude << 'EOF'
 #!/bin/bash
 export NVM_DIR="$HOME/.nvm"
@@ -37,233 +37,233 @@ exec "$(dirname "$(readlink -f "$0")")/../../lib/node_modules/@anthropic-ai/clau
 EOF
 chmod +x ~/.npm-global/bin/claude
 
-# 验证
+# Verify
 claude --version
-node --version  # 应为 v22.x.x
+node --version  # should be v22.x.x
 ```
 
 ---
 
-## 3. Discord 图片无法加载
+## 3. Discord images fail to load
 
-**现象**：Discord 文字消息正常，但图片/附件无法加载或显示失败
+**Symptom**: Discord text messages work fine, but images/attachments fail to load or display
 
-**原因**：Discord CDN 域名（`cdn.discordapp.com` 等）在国内 DNS 解析失败或被污染
+**Cause**: Discord CDN domains (`cdn.discordapp.com`, etc.) fail DNS resolution or are polluted in China
 
-**解决方案**：
+**Solution**:
 ```bash
-# 在 /etc/hosts 中添加 Discord CDN 静态解析
-# 先用 nslookup 在境外查到正确 IP，然后：
+# Add Discord CDN static entries to /etc/hosts
+# First use nslookup from outside China to get the correct IPs, then:
 sudo tee -a /etc/hosts << 'EOF'
 162.159.128.233 cdn.discordapp.com
 162.159.128.233 media.discordapp.net
 EOF
 
-# 验证
+# Verify
 ping cdn.discordapp.com
 ```
 
 ---
 
-## 4. workspace 路径报错（用户名不同）
+## 4. workspace path errors (different username)
 
-**现象**：OpenClaw 报错 `ENOENT: no such file or directory /home/olduser/...`
+**Symptom**: OpenClaw reports `ENOENT: no such file or directory /home/olduser/...`
 
-**原因**：新旧服务器用户名不同，`openclaw.json` 中的绝对路径仍指向旧用户目录
+**Cause**: Username differs between old and new server; absolute paths in `openclaw.json` still point to the old user's home directory
 
-**解决方案**：
+**Solution**:
 ```bash
-OLD_USER="旧用户名"
+OLD_USER="old-username"
 NEW_USER=$(whoami)
 
-# 批量替换 openclaw.json 中的路径
+# Bulk-replace paths in openclaw.json
 sed -i "s|/home/$OLD_USER|/home/$NEW_USER|g" ~/.openclaw/openclaw.json
 
-# 同时修正 CLAUDE.md
+# Also fix CLAUDE.md
 sed -i "s|/home/$OLD_USER|/home/$NEW_USER|g" ~/.openclaw/CLAUDE.md
 
-# 验证
+# Verify
 grep "/home/" ~/.openclaw/openclaw.json | head -5
 ```
 
 ---
 
-## 5. git push 失败（SSH 密钥权限）
+## 5. git push fails (SSH key permissions)
 
-**现象**：`git push` 报错 `WARNING: UNPROTECTED PRIVATE KEY FILE!` 或 `Permission denied (publickey)`
+**Symptom**: `git push` reports `WARNING: UNPROTECTED PRIVATE KEY FILE!` or `Permission denied (publickey)`
 
-**原因**：SSH 私钥权限过宽（不能是 644，必须是 600）
+**Cause**: SSH private key permissions are too broad (must not be 644, must be 600)
 
-**解决方案**：
+**Solution**:
 ```bash
-# 修正私钥权限
+# Fix private key permissions
 chmod 600 ~/.ssh/id_ed25519
-chmod 600 ~/.ssh/id_rsa  # 如果有 rsa 密钥
+chmod 600 ~/.ssh/id_rsa  # if rsa key exists
 chmod 700 ~/.ssh
 chmod 600 ~/.ssh/config
 
-# 验证
+# Verify
 ls -la ~/.ssh/
-# 私钥应显示 -rw-------
+# Private keys should show -rw-------
 
-# 测试 SSH 连接
+# Test SSH connection
 ssh -T git@github.com
 ```
 
 ---
 
-## 6. 退出 SSH 后服务停止（systemd session 被杀）
+## 6. Service stops after SSH logout (systemd session killed)
 
-**现象**：SSH 断开后，OpenClaw 自动停止；journalctl 显示 `session closed`
+**Symptom**: OpenClaw stops automatically after SSH disconnect; journalctl shows `session closed`
 
-**原因**：用户 systemd session 在 SSH 断开时被终止，所有用户级服务随之停止
+**Cause**: User systemd session is terminated when SSH disconnects, stopping all user-level services
 
-**解决方案**：
+**Solution**:
 ```bash
-# 允许用户 session 在退出后继续运行
+# Allow user session to continue after logout
 sudo loginctl enable-linger $USER
 
-# 验证
+# Verify
 loginctl show-user $USER | grep Linger
-# 应显示 Linger=yes
+# Should show Linger=yes
 
-# 重新启动服务
+# Restart the service
 systemctl --user start openclaw-gateway
 ```
 
 ---
 
-## 7. OpenClaw 端口占用
+## 7. OpenClaw port already in use
 
-**现象**：`openclaw gateway start` 报错 `EADDRINUSE: address already in use :::端口号`
+**Symptom**: `openclaw gateway start` reports `EADDRINUSE: address already in use :::PORT`
 
-**原因**：上次进程未正常退出，或有僵尸进程占用端口
+**Cause**: Previous process did not exit cleanly, or a zombie process is holding the port
 
-**解决方案**：
+**Solution**:
 ```bash
-# 查找占用端口的进程（默认端口通常是 3000 或 8080）
+# Find the process using the port (default port is usually 3000 or 8080)
 PORT=$(grep -o '"port":[0-9]*' ~/.openclaw/openclaw.json | grep -o '[0-9]*' | head -1)
 lsof -i :$PORT
 
-# 杀掉占用进程
+# Kill the process holding the port
 kill -9 $(lsof -ti :$PORT)
 
-# 或者修改 openclaw.json 换用其他端口
-# 重新启动
+# Or change the port in openclaw.json
+# Then restart
 openclaw gateway start
 ```
 
 ---
 
-## 8. Discord Bot 离线（两台同时运行）
+## 8. Discord Bot offline (two instances running simultaneously)
 
-**现象**：Bot 在 Discord 显示离线，或消息延迟极高、经常断线重连
+**Symptom**: Bot shows as offline in Discord, or messages are heavily delayed or frequently disconnecting
 
-**原因**：同一个 Bot Token 在两台服务器同时运行，Discord 会强制踢掉旧连接，导致频繁重连
+**Cause**: The same Bot Token is running on two servers simultaneously; Discord force-disconnects the old connection, causing frequent reconnects
 
-**解决方案**：
+**Solution**:
 ```bash
-# 在旧服务器上停止 OpenClaw
+# Stop OpenClaw on the old server
 systemctl --user stop openclaw-gateway
 
-# 确认旧服务器已停止后，在新服务器重启
+# After confirming the old server is stopped, restart on new server
 systemctl --user restart openclaw-gateway
 
-# 验证只有一个实例运行
-# 检查旧服务器
-# systemctl --user status openclaw-gateway  # 应显示 inactive
+# Verify only one instance is running
+# Check old server:
+# systemctl --user status openclaw-gateway  # should show inactive
 ```
-迁移期间必须保证同一时间只有一台服务器运行。
+During migration, ensure only one server is running at any given time.
 
 ---
 
-## 9. npm install 超时（国内网络）
+## 9. npm install timeout (China network)
 
-**现象**：`npm install` 卡住，最终报错 `ETIMEDOUT` 或 `ECONNRESET`
+**Symptom**: `npm install` hangs and eventually reports `ETIMEDOUT` or `ECONNRESET`
 
-**原因**：国内网络访问 `registry.npmjs.org` 很慢或不通
+**Cause**: China network access to `registry.npmjs.org` is very slow or unavailable
 
-**解决方案**：
+**Solution**:
 ```bash
-# 切换到 npmmirror 国内镜像
+# Switch to npmmirror China mirror
 npm config set registry https://registry.npmmirror.com
 
-# 验证配置
+# Verify config
 npm config get registry
 
-# 重试安装
+# Retry installation
 npm install -g @anthropic-ai/claude-code
 
-# 安装完成后可以恢复（可选）
+# Optional: restore original after installation
 # npm config set registry https://registry.npmjs.org
 ```
 
 ---
 
-## 10. Node.js 版本不对（系统自带旧版）
+## 10. Wrong Node.js version (system's old version)
 
-**现象**：`node --version` 显示 v12/v14/v16，Claude Code 报错版本不兼容
+**Symptom**: `node --version` shows v12/v14/v16; Claude Code reports version incompatibility
 
-**原因**：shell 优先使用了 `/usr/bin/node`（系统包管理器安装的旧版），而非 nvm 管理的 Node 22
+**Cause**: Shell is using `/usr/bin/node` (old version from system package manager) instead of nvm-managed Node 22
 
-**解决方案**：
+**Solution**:
 ```bash
-# 确认 nvm 已加载
+# Confirm nvm is loaded
 export NVM_DIR="$HOME/.nvm"
 source "$NVM_DIR/nvm.sh"
 
-# 切换到 Node 22
+# Switch to Node 22
 nvm use 22
 nvm alias default 22
 
-# 确保 ~/.bashrc 包含 nvm 初始化（重新登录后生效）
+# Ensure ~/.bashrc includes nvm initialization (takes effect on next login)
 grep 'nvm' ~/.bashrc || echo 'export NVM_DIR="$HOME/.nvm"
 [ -s "$NVM_DIR/nvm.sh" ] && source "$NVM_DIR/nvm.sh"' >> ~/.bashrc
 
-# 验证
-node --version   # 应为 v22.x.x
-which node       # 应为 ~/.nvm/versions/node/v22.x.x/bin/node
+# Verify
+node --version   # should be v22.x.x
+which node       # should be ~/.nvm/versions/node/v22.x.x/bin/node
 ```
 
 ---
 
-## 11. setup.sh 权限不足
+## 11. setup.sh permission denied
 
-**现象**：`./setup.sh` 报错 `Permission denied`
+**Symptom**: `./setup.sh` reports `Permission denied`
 
-**原因**：脚本文件没有可执行权限
+**Cause**: Script file lacks execute permission
 
-**解决方案**：
+**Solution**:
 ```bash
-# 方法 1：用 bash 直接运行（无需执行权限）
+# Method 1: Run directly with bash (no execute permission needed)
 bash ~/setup.sh
 
-# 方法 2：添加执行权限后运行
+# Method 2: Add execute permission then run
 chmod +x ~/setup.sh
 ./setup.sh
 ```
-推荐始终使用 `bash ~/setup.sh` 方式，避免权限问题。
+Always recommended to use `bash ~/setup.sh` to avoid permission issues.
 
 ---
 
-## 12. 飞书连不上（应用未发布）
+## 12. Feishu not connecting (app not published)
 
-**现象**：飞书消息无响应，日志显示连接失败或鉴权错误
+**Symptom**: No response to Feishu messages; logs show connection failure or auth error
 
-**原因**：
-- 飞书应用未发布（仍在开发/测试状态）
-- 应用权限过期或被撤销
-- Bot 未被添加到目标群组
+**Cause**:
+- Feishu app not published (still in development/testing status)
+- App permissions expired or revoked
+- Bot not added to the target group
 
-**解决方案**：
-1. 登录[飞书开放平台](https://open.feishu.cn/)
-2. 进入应用管理 → 找到对应应用
-3. 检查应用状态是否为**已发布**
-4. 检查**权限管理** → 确认消息相关权限已申请并通过
-5. 在目标群组中 **@机器人** 并将其加入群组
-6. 如果是企业应用，确认企业管理员已审批应用发布
+**Solution**:
+1. Log in to [Feishu Open Platform](https://open.feishu.cn/)
+2. Go to App Management → find the target app
+3. Check if app status is **Published**
+4. Check **Permission Management** → confirm messaging permissions are applied and approved
+5. In the target group, **@mention the bot** and add it to the group
+6. If it's an enterprise app, confirm the enterprise admin has approved the app publication
 
 ```bash
-# 检查飞书相关日志
+# Check Feishu-related logs
 journalctl --user -u openclaw-gateway --no-pager -n 100 | grep -i feishu
 ```

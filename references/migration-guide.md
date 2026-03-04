@@ -1,461 +1,461 @@
-# OpenClaw 服务器迁移操作手册（完整版）
+# OpenClaw Server Migration Operations Manual (Full Version)
 
-> **目标**：把旧服务器的 OpenClaw + Claude Code 完整迁移到新 Ubuntu 服务器
-> **原则**：用户只做最少的手动操作，其余全交给 Agent
-> **前提**：旧服务器已有运行中的 OpenClaw
+> **Goal**: Fully migrate OpenClaw + Claude Code from an old server to a new Ubuntu server
+> **Principle**: User performs minimal manual operations; everything else is handled by the Agent
+> **Prerequisite**: Old server already has a running OpenClaw instance
 
 ---
 
-## 总览：迁移全流程
+## Overview: Full Migration Flow
 
 ```
-阶段一：迁移前检查
-阶段二：旧服务器准备（Agent 执行）
-阶段三：新服务器部署（用户 2 条命令 + Claude Code 自动）
-阶段四：验证 + 切换
-阶段五：善后
+Phase 1: Pre-migration checks
+Phase 2: Old server preparation (Agent handles)
+Phase 3: New server deployment (User: 2 commands + Claude Code auto)
+Phase 4: Verification + switchover
+Phase 5: Cleanup
 ```
 
-### 谁做什么
+### Who does what
 
-| 步骤 | 执行者 | 用户操作 |
-|------|--------|----------|
-| 迁移前检查 | 🦁 Agent | 回答几个问题 |
-| 检查/安装 Claude Code | 🦁 Agent | 提供 API 信息（如需） |
-| 打包 + 传输 | 🦁 Agent | 提供新服务器 SSH 信息 |
-| 新服务器装环境 | 👤 用户 | 跑 1 条命令：`bash ~/setup.sh` |
-| 安装 OpenClaw + 恢复 | 🤖 Claude Code | 跑 1 条命令启动 Claude Code |
-| 验证 | 👤 用户 | 发消息测试 |
-| 善后 | 👤 用户 | 确认后关旧服务器 |
-
----
-
-## 阶段一：迁移前检查
-
-> 目的：确认迁移条件满足，避免中途卡住
-
-### 1.1 新服务器要求
-
-- [ ] **操作系统**：Ubuntu 22.04 / 24.04（推荐）
-- [ ] **配置**：2 核 CPU，8G 内存以上
-- [ ] **SSH 可登录**：有 root 或 sudo 权限的用户
-- [ ] **网络**：
-  - 能访问 npm 仓库（国内可用 npmmirror 加速）
-  - 能访问你的 AI API 提供商（第三方代理无需翻墙）
-  - 如需 Discord：需要代理/VPN
-
-### 1.2 需要准备的信息
-
-| 信息 | 说明 | 示例 |
-|------|------|------|
-| 新服务器 IP | SSH 登录用 | 1.2.3.4 |
-| SSH 用户名 | 新服务器的用户 | admin / root / ubuntu |
-| SSH 密码或密钥 | 登录认证 | 密码或 .pem 文件 |
-| API 信息（如需） | Claude Code 的 API 代理地址 + Key | 仅旧服务器没有 Claude Code 时需要 |
-
-### 1.3 重要提醒
-
-⚠️ **Discord Bot 不能同时在两台服务器运行**
-- 同一个 Bot Token 只能一个实例在线
-- 迁移时需要先停旧服务器，再启新服务器
-- 会有短暂离线时间（约 5-10 分钟）
-
-⚠️ **敏感信息安全**
-- 迁移包里包含 API Key、Bot Token 等敏感信息
-- 传输走 scp（加密通道），不走公开渠道
-- 迁移完成后清理新服务器上的迁移包文件
+| Step | Executor | User action |
+|------|----------|-------------|
+| Pre-migration checks | 🦁 Agent | Answer a few questions |
+| Check/install Claude Code | 🦁 Agent | Provide API info (if needed) |
+| Pack + transfer | 🦁 Agent | Provide new server SSH info |
+| New server setup | 👤 User | Run 1 command: `bash ~/setup.sh` |
+| Install OpenClaw + restore | 🤖 Claude Code | Run 1 command to start Claude Code |
+| Verification | 👤 User | Send test messages |
+| Cleanup | 👤 User | Shut down old server after confirmation |
 
 ---
 
-## 阶段二：旧服务器准备（🦁 Agent 执行）
+## Phase 1: Pre-migration Checks
 
-> 用户对 Agent 说："帮我准备迁移"，Agent 自动完成以下所有步骤
+> Purpose: Confirm migration conditions are met, avoid getting stuck midway
 
-### 2.1 检查/安装 Claude Code
+### 1.1 New server requirements
 
-Agent 自动检查 Claude Code 是否已安装：
+- [ ] **Operating system**: Ubuntu 22.04 / 24.04 (recommended)
+- [ ] **Resources**: 2-core CPU, 8GB+ RAM
+- [ ] **SSH access**: User with root or sudo privileges
+- [ ] **Network**:
+  - Can access npm registry (npmmirror available for China networks)
+  - Can access your AI API provider (third-party proxies don't need VPN)
+  - If using Discord: proxy/VPN required
 
-**✅ 已安装** → 验证能用，跳到 2.2
+### 1.2 Information to prepare
 
-**❌ 未安装** → Agent 自动执行：
+| Info | Description | Example |
+|------|-------------|---------|
+| New server IP | For SSH login | 1.2.3.4 |
+| SSH username | User on new server | admin / root / ubuntu |
+| SSH password or key | Login credentials | Password or .pem file |
+| API info (if needed) | Claude Code API proxy URL + Key | Only needed if old server lacks Claude Code |
+
+### 1.3 Important notices
+
+⚠️ **Discord Bot cannot run on two servers simultaneously**
+- The same Bot Token can only have one active instance
+- You must stop the old server before starting the new one
+- There will be a brief offline period (~5-10 minutes)
+
+⚠️ **Sensitive data security**
+- The migration pack contains API Keys, Bot Tokens, and other sensitive data
+- Transfer uses scp (encrypted channel), not public channels
+- Clean up migration pack files on the new server after migration
+
+---
+
+## Phase 2: Old Server Preparation (🦁 Agent handles)
+
+> User tells Agent: "Help me prepare for migration", Agent automatically completes all steps below
+
+### 2.1 Check/install Claude Code
+
+Agent automatically checks whether Claude Code is installed:
+
+**✅ Installed** → Verify it works, proceed to 2.2
+
+**❌ Not installed** → Agent automatically runs:
 
 ```bash
-# 1. 安装
+# 1. Install
 npm install -g @anthropic-ai/claude-code
 
-# 2. Agent 向用户询问 API 信息：
-#    - API 代理地址（如 https://api.fluxnode.org）
+# 2. Agent asks user for API info:
+#    - API proxy URL (e.g. https://api.fluxnode.org)
 #    - API Key
-#    用户通过 Discord/飞书 回复即可
+#    User replies via Discord/Feishu
 
-# 3. Agent 写入配置
+# 3. Agent writes config
 # ~/.claude/settings.json
 
-# 4. Agent 测试
+# 4. Agent tests
 claude "hello test"
-# → 成功：告诉用户 "Claude Code 已就绪 ✅"
-# → 失败：排查问题，再次询问用户
+# → Success: tells user "Claude Code is ready ✅"
+# → Failure: troubleshoot and ask user again
 ```
 
-> 👤 用户操作：仅需提供 API 信息（如果没有 Claude Code 的话）
+> 👤 User action: Only need to provide API info (if Claude Code is not installed)
 
-### 2.2 打包迁移文件
+### 2.2 Pack migration files
 
-Agent 自动创建迁移包，包含：
+Agent automatically creates a migration pack containing:
 
 ```
 ~/openclaw-migration-pack.tar.gz
 │
-├── openclaw-config/                → 恢复到 ~/.openclaw/
-│   ├── openclaw.json               ← 核心配置（API Key、频道 Token、模型设置等）
-│   ├── credentials/                ← Discord/飞书认证文件
-│   ├── skills/                     ← 已安装的 Agent Skill
+├── openclaw-config/                → Restored to ~/.openclaw/
+│   ├── openclaw.json               ← Core config (API Keys, channel tokens, model settings, etc.)
+│   ├── credentials/                ← Discord/Feishu auth files
+│   ├── skills/                     ← Installed Agent Skills
 │   │   ├── agent-reach/
 │   │   ├── capability-evolver/
 │   │   └── skill-vetter/
-│   ├── extensions/                 ← 已安装的插件
+│   ├── extensions/                 ← Installed plugins
 │   │   └── openclaw-tavily/
-│   ├── memory/                     ← 记忆数据库（main.sqlite 等）
-│   ├── feishu/                     ← 飞书相关文件
-│   ├── workspace/                  ← 工作区（笔记、记忆、脚本、任务等）
-│   ├── workspace-coder/            ← 子代理 workspace
-│   ├── workspace-paper-tracker/    ← 子代理 workspace
-│   ├── CLAUDE.md                   ← Agent 指令文件
-│   └── exec-approvals.json         ← 已批准的执行权限
+│   ├── memory/                     ← Memory database (main.sqlite, etc.)
+│   ├── feishu/                     ← Feishu-related files
+│   ├── workspace/                  ← Workspace (notes, memory, scripts, tasks, etc.)
+│   ├── workspace-coder/            ← Sub-agent workspace
+│   ├── workspace-paper-tracker/    ← Sub-agent workspace
+│   ├── CLAUDE.md                   ← Agent instruction file
+│   └── exec-approvals.json         ← Approved execution permissions
 │
-├── claude-config/                  → 恢复到 ~/.claude/
-│   ├── settings.json               ← API 配置
-│   ├── projects/                   ← 项目配置
+├── claude-config/                  → Restored to ~/.claude/
+│   ├── settings.json               ← API config
+│   ├── projects/                   ← Project configs
 │   └── ...
 │
-├── ssh-keys/                       → 恢复到 ~/.ssh/
-│   ├── id_ed25519                  ← 私钥（用于 git push 等）
+├── ssh-keys/                       → Restored to ~/.ssh/
+│   ├── id_ed25519                  ← Private key (for git push, etc.)
 │   ├── id_ed25519.pub
 │   ├── config
 │   └── known_hosts
 │
-├── crontab-backup.txt              ← 定时任务备份
-├── hosts-custom.txt                ← /etc/hosts 自定义条目
+├── crontab-backup.txt              ← Scheduled task backup
+├── hosts-custom.txt                ← /etc/hosts custom entries
 │
-└── dashboard/                      → 恢复到 ~/openclaw-dashboard/（可选）
+└── dashboard/                      → Restored to ~/openclaw-dashboard/ (optional)
     ├── backend/
     ├── frontend/
     └── ...
 ```
 
-### 2.3 生成辅助文件
+### 2.3 Generate auxiliary files
 
-Agent 自动生成两个关键文件：
+Agent automatically generates two key files:
 
-**① `setup.sh` — 新服务器一键安装脚本**
+**① `setup.sh` — One-click install script for new server**
 
-功能：
-- 安装 nvm + Node.js 22
-- 配置 npm 全局路径 `~/.npm-global`
-- 安装 Claude Code
-- 从迁移包恢复 `~/.claude/` 配置
-- 从迁移包恢复 `~/.ssh/` 密钥（权限设为 600）
-- 验证 Claude Code 可用
-- 安装基础依赖（git, curl, python3 等）
+Functions:
+- Install nvm + Node.js 22
+- Configure npm global path `~/.npm-global`
+- Install Claude Code
+- Restore `~/.claude/` config from migration pack
+- Restore `~/.ssh/` keys from migration pack (permissions set to 600)
+- Verify Claude Code is functional
+- Install base dependencies (git, curl, python3, etc.)
 
-**② `migration-instructions.md` — 给 Claude Code 的迁移指令**
+**② `migration-instructions.md` — Migration instructions for Claude Code**
 
-内容：Claude Code 需要执行的所有迁移步骤（详见阶段三）
+Contents: All migration steps Claude Code needs to execute (see Phase 3)
 
-### 2.4 传输到新服务器
+### 2.4 Transfer to new server
 
-用户提供新服务器 SSH 信息后，Agent 执行：
+After user provides new server SSH info, Agent runs:
 
 ```bash
 scp ~/openclaw-migration-pack.tar.gz \
     ~/setup.sh \
     ~/migration-instructions.md \
-    用户名@新服务器IP:~/
+    username@new-server-ip:~/
 ```
 
-> 👤 用户操作：提供新服务器 IP + SSH 用户名 + 密码/密钥
+> 👤 User action: Provide new server IP + SSH username + password/key
 
-### 2.5 停止旧服务器 OpenClaw
+### 2.5 Stop old server OpenClaw
 
-⚠️ **重要**：在新服务器启动前停止旧服务器，避免 Discord Bot 冲突
+⚠️ **Important**: Stop the old server before starting the new one to avoid Discord Bot conflicts
 
 ```bash
-# Agent 在确认新服务器文件传输完毕后执行
+# Agent runs this after confirming file transfer is complete
 systemctl --user stop openclaw-gateway
 ```
 
-Agent 会告诉用户："旧服务器已停止，请到新服务器执行 setup.sh"
+Agent will tell user: "Old server stopped. Please run setup.sh on the new server."
 
 
 ---
 
-## 阶段三：新服务器部署
+## Phase 3: New Server Deployment
 
-### Step 1：跑安装脚本 👤
+### Step 1: Run setup script 👤
 
-SSH 登录新服务器，执行一条命令：
+SSH to the new server and run one command:
 
 ```bash
 bash ~/setup.sh
 ```
 
-脚本执行过程（全自动，约 5 分钟）：
+Script execution (fully automatic, ~5 minutes):
 
 ```
-[1/7] 安装 nvm...                    ✅
-[2/7] 安装 Node.js 22...             ✅
-[3/7] 配置 npm 全局路径...            ✅
-[4/7] 安装 Claude Code...            ✅
-[5/7] 恢复 Claude Code 配置...       ✅
-[6/7] 恢复 SSH 密钥...               ✅
-[7/7] 验证 Claude Code...            ✅
+[1/7] Installing nvm...                    ✅
+[2/7] Installing Node.js 22...             ✅
+[3/7] Configuring npm global path...       ✅
+[4/7] Installing Claude Code...            ✅
+[5/7] Restoring Claude Code config...      ✅
+[6/7] Restoring SSH keys...                ✅
+[7/7] Verifying Claude Code...             ✅
 
-✅ 基础环境就绪！请执行下一步：
-claude --dangerously-skip-permissions "按照 ~/migration-instructions.md 完成 OpenClaw 迁移"
+✅ Base environment ready! Run next step:
+claude --dangerously-skip-permissions "Follow ~/migration-instructions.md to complete the OpenClaw migration"
 ```
 
-> 如果某步失败，脚本会停下来并显示错误信息。
-> 常见问题：npm 下载慢 → 设置国内镜像（脚本会自动检测并提示）
+> If a step fails, the script will stop and display an error message.
+> Common issue: npm download slow → set China mirror (script auto-detects and prompts)
 
-### Step 2：让 Claude Code 完成迁移 👤
+### Step 2: Let Claude Code complete the migration 👤
 
 ```bash
-claude --dangerously-skip-permissions "按照 ~/migration-instructions.md 完成 OpenClaw 迁移"
+claude --dangerously-skip-permissions "Follow ~/migration-instructions.md to complete the OpenClaw migration"
 ```
 
-Claude Code 会根据 `migration-instructions.md` 自动完成以下所有步骤：
+Claude Code will automatically complete all the following steps based on `migration-instructions.md`:
 
-#### 3.1 安装 OpenClaw 及工具
+#### 3.1 Install OpenClaw and tools
 
 ```bash
 npm install -g openclaw
 npm install -g mcporter
-# 验证
+# Verify
 which openclaw  # ~/.npm-global/bin/openclaw
 ```
 
-#### 3.2 恢复 OpenClaw 配置
+#### 3.2 Restore OpenClaw config
 
 ```bash
-# 解压迁移包
+# Extract migration pack
 tar xzf ~/openclaw-migration-pack.tar.gz -C ~/migration-tmp/
 
-# 恢复 ~/.openclaw/ 目录
+# Restore ~/.openclaw/ directory
 cp -r ~/migration-tmp/openclaw-config/* ~/.openclaw/
-# 注意：不覆盖刚安装的 OpenClaw 程序文件（node_modules 等）
+# Note: do not overwrite newly installed OpenClaw program files (node_modules, etc.)
 ```
 
-#### 3.3 路径修正
+#### 3.3 Fix paths
 
-检查新服务器用户名，如果与旧服务器不同：
+Check new server username; if different from old server:
 
 ```bash
-OLD_USER="admin"  # 旧服务器用户名
+OLD_USER="admin"  # Old server username
 NEW_USER=$(whoami)
 
 if [ "$OLD_USER" != "$NEW_USER" ]; then
-    # 批量替换 openclaw.json 中的路径
+    # Bulk-replace paths in openclaw.json
     sed -i "s|/home/$OLD_USER|/home/$NEW_USER|g" ~/.openclaw/openclaw.json
     
-    # 替换 crontab 中的路径
+    # Replace paths in crontab
     sed -i "s|/home/$OLD_USER|/home/$NEW_USER|g" ~/migration-tmp/crontab-backup.txt
 fi
 ```
 
-#### 3.4 系统配置恢复
+#### 3.4 Restore system config
 
 ```bash
-# /etc/hosts — Discord CDN 解析（国内服务器需要）
+# /etc/hosts — Discord CDN resolution (needed for China servers)
 sudo tee -a /etc/hosts < ~/migration-tmp/hosts-custom.txt
 
-# crontab — 恢复定时任务
+# crontab — restore scheduled tasks
 crontab ~/migration-tmp/crontab-backup.txt
 
-# 安装 proxychains4
+# Install proxychains4
 sudo apt install -y proxychains4
-# 配置 /etc/proxychains4.conf
+# Configure /etc/proxychains4.conf
 ```
 
-#### 3.5 代理服务部署
+#### 3.5 Deploy proxy service
 
-> 给 Discord 等需要翻墙的服务使用
-> Claude Code 会根据旧服务器的代理配置，在新服务器上部署相同方案
+> For services that need a proxy (Discord, etc.)
+> Claude Code will deploy the same proxy setup as the old server based on its config
 
 ```bash
-# 安装代理软件
-# 配置代理规则
-# 启动代理服务
-# 验证 127.0.0.1:10808 可用
+# Install proxy software
+# Configure proxy rules
+# Start proxy service
+# Verify 127.0.0.1:10808 is available
 ```
 
-#### 3.6 Claude Code nvm Wrapper 检查
+#### 3.6 Check Claude Code nvm wrapper
 
 ```bash
-# 检查 ~/.npm-global/bin/claude 是否是 nvm wrapper
-# 如果被 npm install 覆盖成了直接链接，需要重建
-# wrapper 确保使用 nvm 的 Node 22 而不是系统自带的旧版本
+# Check if ~/.npm-global/bin/claude is an nvm wrapper
+# If npm install overwrote it with a direct link, rebuild it
+# The wrapper ensures Node 22 from nvm is used instead of the system's old version
 ```
 
-#### 3.7 启动 OpenClaw
+#### 3.7 Start OpenClaw
 
 ```bash
-# 启动
+# Start
 openclaw gateway start
 
-# 配置 systemd 开机自启
-# （使用 openclaw 自带的 service 文件，或从迁移包恢复）
+# Configure systemd autostart
+# (use openclaw's bundled service file, or restore from migration pack)
 systemctl --user daemon-reload
 systemctl --user enable openclaw-gateway
 systemctl --user start openclaw-gateway
 
-# 防止退出 SSH 后服务被杀
+# Prevent service from being killed after SSH logout
 sudo loginctl enable-linger $USER
 ```
 
-#### 3.8 恢复 Dashboard（可选）
+#### 3.8 Restore Dashboard (optional)
 
 ```bash
-# 如果迁移包里有 dashboard
+# If migration pack contains dashboard
 cp -r ~/migration-tmp/dashboard/ ~/openclaw-dashboard/
 pip3 install -r ~/openclaw-dashboard/backend/requirements.txt
-# 配置 systemd service
+# Configure systemd service
 ```
 
-#### 3.9 日志检查
+#### 3.9 Check logs
 
 ```bash
-# 检查 OpenClaw 日志
+# Check OpenClaw logs
 journalctl --user -u openclaw-gateway --no-pager -n 50
 
-# 确认频道连接状态
-# - Discord: 看日志里是否有 "discord connected" 类似信息
-# - 飞书: 看日志里是否有 feishu 长连接建立信息
+# Confirm channel connection status
+# - Discord: look for "discord connected" or similar in logs
+# - Feishu: look for Feishu long-connection established in logs
 ```
 
-#### 3.10 清理迁移文件
+#### 3.10 Clean up migration files
 
 ```bash
-# 迁移完成后清理敏感文件
+# Clean up sensitive files after migration
 rm -rf ~/migration-tmp/
 rm ~/openclaw-migration-pack.tar.gz
 rm ~/setup.sh
-# migration-instructions.md 可以保留作为参考
+# migration-instructions.md can be kept for reference
 ```
 
 
 ---
 
-## 阶段四：验证 👤
+## Phase 4: Verification 👤
 
-### 4.1 基础验证
+### 4.1 Basic verification
 
-| 检查项 | 方法 | 预期结果 |
-|--------|------|----------|
-| OpenClaw 运行 | `openclaw gateway status` | 显示运行中 |
-| Discord 收发 | 在 Discord 发消息 | Agent 正常回复 |
-| 飞书收发 | 在飞书发消息 | Agent 正常回复 |
-| 记忆完整 | 问 Agent "你记得我是谁吗" | 能回忆用户信息 |
-| 定时任务 | `crontab -l` | 显示所有定时任务 |
-| Claude Code | `claude "test"` | 正常对话 |
-| Git 推送 | `cd ~/.openclaw/workspace && git push` | 推送成功 |
+| Check | Method | Expected result |
+|-------|--------|-----------------|
+| OpenClaw running | `openclaw gateway status` | Shows running |
+| Discord send/receive | Send message in Discord | Agent replies normally |
+| Feishu send/receive | Send message in Feishu | Agent replies normally |
+| Memory intact | Ask Agent "do you remember who I am" | Agent recalls user info |
+| Scheduled tasks | `crontab -l` | Shows all scheduled tasks |
+| Claude Code | `claude "test"` | Normal conversation |
+| Git push | `cd ~/.openclaw/workspace && git push` | Push succeeds |
 
-### 4.2 进阶验证（可选）
+### 4.2 Advanced verification (optional)
 
-- [ ] 心跳正常（等一个心跳周期，检查是否触发）
-- [ ] Dashboard 可访问（如果有）
-- [ ] 子代理可用（在 Discord 触发一个需要 Claude Code 的任务）
-- [ ] 自动 git 提交正常（等一个周期或手动触发脚本）
+- [ ] Heartbeat working (wait one heartbeat cycle, check if triggered)
+- [ ] Dashboard accessible (if applicable)
+- [ ] Sub-agents functional (trigger a task requiring Claude Code in Discord)
+- [ ] Auto git commits working (wait one cycle or trigger script manually)
 
-### 4.3 验证不通过怎么办
+### 4.3 What to do if verification fails
 
-**回滚方案**：重新启动旧服务器的 OpenClaw
+**Rollback plan**: Restart OpenClaw on the old server
 
 ```bash
-# 在旧服务器上
+# On old server
 systemctl --user start openclaw-gateway
 ```
 
-旧服务器的数据完全没动过，随时可以回滚。
+The old server's data is completely untouched and can be rolled back at any time.
 
 ---
 
-## 阶段五：善后
+## Phase 5: Cleanup
 
-### 5.1 观察期
+### 5.1 Observation period
 
-- 新服务器运行 **3-7 天**，确认稳定
-- 期间留意：
-  - 频道消息是否偶尔丢失
-  - 定时任务是否都正常触发
-  - 内存/CPU 使用是否正常
-  - 日志里是否有异常错误
+- Run new server for **3-7 days** to confirm stability
+- Watch for:
+  - Occasional channel message loss
+  - All scheduled tasks triggering correctly
+  - Normal memory/CPU usage
+  - Any unusual errors in logs
 
-### 5.2 关停旧服务器
+### 5.2 Shut down old server
 
-确认稳定后：
+After confirming stability:
 
 ```bash
-# 旧服务器上
+# On old server
 systemctl --user stop openclaw-gateway
 systemctl --user disable openclaw-gateway
 
-# 可选：清理旧服务器上的迁移包
+# Optional: clean up migration pack from old server
 rm ~/openclaw-migration-pack.tar.gz
 ```
 
-### 5.3 更新记录
+### 5.3 Update records
 
-- 更新 MEMORY.md 记录迁移事件
-- 更新 TOOLS.md 里的服务器信息（新 IP 等）
-- 如果有 Dashboard，更新安全组/防火墙规则
-
----
-
-## ⚠️ 踩坑备忘
-
-| 问题 | 原因 | 解决方案 |
-|------|------|----------|
-| Anthropic API 403 | 国内 IP 被 Anthropic 封锁 | 使用第三方 API 代理（改 baseUrl） |
-| Claude Code 启动失败 | npm install 覆盖了 nvm wrapper | 重建 bash wrapper 脚本 |
-| Discord 图片无法加载 | CDN DNS 解析失败 | /etc/hosts 加 Discord CDN 静态解析 |
-| workspace 路径报错 | 新旧服务器用户名不同 | sed 批量替换 openclaw.json 中的路径 |
-| git push 失败 | SSH 密钥权限不对 | `chmod 600 ~/.ssh/id_ed25519` |
-| 退出 SSH 后服务挂了 | systemd user session 被终止 | `sudo loginctl enable-linger $USER` |
-| OpenClaw 端口占用 | 旧进程没清理干净 | kill 旧进程或在 openclaw.json 换端口 |
-| Discord Bot 离线 | 两台服务器同时用同一个 Token | 确保旧服务器已停止再启动新的 |
-| npm install 超时 | 国内网络访问 npm 慢 | 设置 npmmirror：`npm config set registry https://registry.npmmirror.com` |
-| Node.js 版本不对 | 用了系统自带的旧版本 | 确认 `nvm use 22`，检查 `node -v` |
-| setup.sh 权限不足 | 脚本没有执行权限 | `chmod +x ~/setup.sh` 或用 `bash ~/setup.sh` |
-| 飞书连不上 | 应用未发布或权限过期 | 检查飞书开放平台应用状态 |
+- Update MEMORY.md to record the migration event
+- Update server info in TOOLS.md (new IP, etc.)
+- If Dashboard is present, update security group/firewall rules
 
 ---
 
-## 时间估算
+## ⚠️ Known Pitfalls
 
-| 步骤 | 耗时 | 执行者 |
-|------|------|--------|
-| 迁移前检查 | 2 分钟 | 👤 回答问题 |
-| Agent 检查/安装 Claude Code | 0-5 分钟 | 🦁 自动 |
-| Agent 打包 + scp | 5 分钟 | 🦁 自动 |
-| 新服务器 `bash setup.sh` | 5 分钟 | 👤 1 条命令 |
-| Claude Code 自动迁移 | 10-15 分钟 | 🤖 自动 |
-| 验证 | 5 分钟 | 👤 |
-| **总计** | **约 30 分钟** | |
+| Issue | Cause | Solution |
+|-------|-------|----------|
+| Anthropic API 403 | Anthropic blocks direct China IP connections | Use a third-party API proxy (change baseUrl) |
+| Claude Code fails to start | npm install overwrote the nvm wrapper | Rebuild the bash wrapper script |
+| Discord images fail to load | CDN DNS resolution failure | Add Discord CDN static entries to /etc/hosts |
+| workspace path errors | Different username on old/new server | Use sed to bulk-replace paths in openclaw.json |
+| git push fails | SSH key permissions wrong | `chmod 600 ~/.ssh/id_ed25519` |
+| Service dies after SSH logout | systemd user session terminated | `sudo loginctl enable-linger $USER` |
+| OpenClaw port already in use | Old process not cleaned up | Kill old process or change port in openclaw.json |
+| Discord Bot offline | Same token running on two servers | Ensure old server is stopped before starting new one |
+| npm install timeout | China network access to npm is slow | Set npmmirror: `npm config set registry https://registry.npmmirror.com` |
+| Wrong Node.js version | System's old version used instead of nvm's | Confirm `nvm use 22`, check `node -v` |
+| setup.sh permission denied | Script lacks execute permission | Use `chmod +x ~/setup.sh` or run with `bash ~/setup.sh` |
+| Feishu not connecting | App not published or permissions expired | Check Feishu Open Platform app status |
 
 ---
 
-## 附录：迁移涉及的关键文件
+## Time Estimates
 
-| 文件/目录 | 作用 | 重要程度 |
-|-----------|------|----------|
-| `~/.openclaw/openclaw.json` | 核心配置（API Key、频道、模型等） | ⭐⭐⭐ 必须 |
-| `~/.openclaw/credentials/` | 频道认证文件 | ⭐⭐⭐ 必须 |
-| `~/.openclaw/workspace/` | 工作区（记忆、笔记、脚本） | ⭐⭐⭐ 必须 |
-| `~/.openclaw/skills/` | 已安装的 Skill | ⭐⭐ 重要 |
-| `~/.openclaw/extensions/` | 已安装的插件 | ⭐⭐ 重要 |
-| `~/.openclaw/memory/` | 记忆数据库 | ⭐⭐ 重要 |
-| `~/.claude/` | Claude Code 配置 | ⭐⭐ 重要 |
-| `~/.ssh/` | SSH 密钥（git 等） | ⭐⭐ 重要 |
-| crontab | 定时任务 | ⭐⭐ 重要 |
-| /etc/hosts | DNS 解析 | ⭐ 可选（国内需要） |
-| Dashboard | 监控面板 | ⭐ 可选 |
+| Step | Duration | Executor |
+|------|----------|----------|
+| Pre-migration checks | 2 min | 👤 Answer questions |
+| Agent check/install Claude Code | 0-5 min | 🦁 Automatic |
+| Agent pack + scp | 5 min | 🦁 Automatic |
+| New server `bash setup.sh` | 5 min | 👤 1 command |
+| Claude Code auto migration | 10-15 min | 🤖 Automatic |
+| Verification | 5 min | 👤 |
+| **Total** | **~30 minutes** | |
+
+---
+
+## Appendix: Key Files Involved in Migration
+
+| File/Directory | Purpose | Importance |
+|----------------|---------|------------|
+| `~/.openclaw/openclaw.json` | Core config (API Keys, channels, models, etc.) | ⭐⭐⭐ Required |
+| `~/.openclaw/credentials/` | Channel auth files | ⭐⭐⭐ Required |
+| `~/.openclaw/workspace/` | Workspace (memory, notes, scripts) | ⭐⭐⭐ Required |
+| `~/.openclaw/skills/` | Installed Skills | ⭐⭐ Important |
+| `~/.openclaw/extensions/` | Installed plugins | ⭐⭐ Important |
+| `~/.openclaw/memory/` | Memory database | ⭐⭐ Important |
+| `~/.claude/` | Claude Code config | ⭐⭐ Important |
+| `~/.ssh/` | SSH keys (for git, etc.) | ⭐⭐ Important |
+| crontab | Scheduled tasks | ⭐⭐ Important |
+| /etc/hosts | DNS resolution | ⭐ Optional (needed for China) |
+| Dashboard | Monitoring panel | ⭐ Optional |

@@ -19,16 +19,16 @@ fi
 OUTPUT=~/migration-instructions.md
 
 cat > "$OUTPUT" << HEREDOC
-# OpenClaw 迁移指令
+# OpenClaw Migration Instructions
 
-> 这是一份给 Claude Code 的自动迁移指令。请按顺序执行所有步骤，每步完成后报告状态。
-> 旧服务器用户名：\`${OLD_USER}\`
+> Automated migration instructions for Claude Code. Please follow all steps in order and report status after each step.
+> Old server username: \`${OLD_USER}\`
 
 ---
 
-## 准备工作
+## Preparation
 
-首先解压迁移包到临时目录：
+First, extract the migration pack to a temporary directory:
 
 \`\`\`bash
 mkdir -p ~/migration-tmp
@@ -39,13 +39,13 @@ NEW_USER=\$(whoami)
 
 ---
 
-## Step 1：安装 openclaw 和 mcporter
+## Step 1: Install openclaw and mcporter
 
 \`\`\`bash
 npm install -g openclaw
 npm install -g mcporter
 
-# 验证安装
+# Verify installation
 which openclaw
 which mcporter
 openclaw --version
@@ -53,117 +53,117 @@ openclaw --version
 
 ---
 
-## Step 2：恢复 OpenClaw 配置
+## Step 2: Restore OpenClaw config
 
 \`\`\`bash
 mkdir -p ~/.openclaw
 
-# 恢复配置文件（不覆盖程序文件）
+# Restore config files (do not overwrite program files)
 if [ -d ~/migration-tmp/openclaw-config ]; then
     cp -r ~/migration-tmp/openclaw-config/. ~/.openclaw/
-    echo "OpenClaw 配置已恢复"
+    echo "OpenClaw config restored"
 else
-    echo "警告：迁移包中未找到 openclaw-config/"
+    echo "Warning: openclaw-config/ not found in migration pack"
 fi
 \`\`\`
 
 ---
 
-## Step 3：路径修正
+## Step 3: Fix paths
 
-如果新旧服务器用户名不同，批量替换路径：
+If the username differs between old and new server, bulk-replace paths:
 
 \`\`\`bash
 OLD_USER="${OLD_USER}"
 NEW_USER=\$(whoami)
 
 if [ "\$OLD_USER" != "\$NEW_USER" ]; then
-    echo "用户名变更：\$OLD_USER → \$NEW_USER，正在修正路径..."
+    echo "Username change: \$OLD_USER → \$NEW_USER, fixing paths..."
 
-    # 修正 openclaw.json 中的路径
+    # Fix paths in openclaw.json
     if [ -f ~/.openclaw/openclaw.json ]; then
         sed -i "s|/home/\$OLD_USER|/home/\$NEW_USER|g" ~/.openclaw/openclaw.json
-        echo "✅ openclaw.json 路径已修正"
+        echo "✅ openclaw.json paths fixed"
     fi
 
-    # 修正 CLAUDE.md 中的路径
+    # Fix paths in CLAUDE.md
     if [ -f ~/.openclaw/CLAUDE.md ]; then
         sed -i "s|/home/\$OLD_USER|/home/\$NEW_USER|g" ~/.openclaw/CLAUDE.md
-        echo "✅ CLAUDE.md 路径已修正"
+        echo "✅ CLAUDE.md paths fixed"
     fi
 
-    # 修正 crontab 备份中的路径
+    # Fix paths in crontab backup
     if [ -f ~/migration-tmp/crontab-backup.txt ]; then
         sed -i "s|/home/\$OLD_USER|/home/\$NEW_USER|g" ~/migration-tmp/crontab-backup.txt
-        echo "✅ crontab 路径已修正"
+        echo "✅ crontab paths fixed"
     fi
 else
-    echo "用户名相同（\$NEW_USER），无需路径修正"
+    echo "Username unchanged (\$NEW_USER), no path fixing needed"
 fi
 \`\`\`
 
 ---
 
-## Step 4：恢复 /etc/hosts
+## Step 4: Restore /etc/hosts
 
 \`\`\`bash
 if [ -f ~/migration-tmp/hosts-custom.txt ] && [ -s ~/migration-tmp/hosts-custom.txt ]; then
-    # 避免重复添加
+    # Avoid duplicate entries
     while IFS= read -r line; do
         [[ "\$line" =~ ^#.*$ || -z "\$line" ]] && continue
         if ! grep -qF "\$line" /etc/hosts; then
             echo "\$line" | sudo tee -a /etc/hosts > /dev/null
         fi
     done < ~/migration-tmp/hosts-custom.txt
-    echo "✅ /etc/hosts 自定义条目已恢复"
+    echo "✅ /etc/hosts custom entries restored"
 else
-    echo "⚠️  hosts-custom.txt 为空或不存在，跳过"
+    echo "⚠️  hosts-custom.txt is empty or missing, skipping"
 fi
 \`\`\`
 
 ---
 
-## Step 5：恢复 crontab
+## Step 5: Restore crontab
 
 \`\`\`bash
 if [ -f ~/migration-tmp/crontab-backup.txt ] && grep -qv '^#' ~/migration-tmp/crontab-backup.txt 2>/dev/null; then
     crontab ~/migration-tmp/crontab-backup.txt
-    echo "✅ crontab 已恢复"
+    echo "✅ crontab restored"
     crontab -l
 else
-    echo "⚠️  crontab 备份为空，跳过"
+    echo "⚠️  crontab backup is empty, skipping"
 fi
 \`\`\`
 
 ---
 
-## Step 6：安装 proxychains4
+## Step 6: Install proxychains4
 
 \`\`\`bash
 sudo apt-get install -y proxychains4
 
-# 如果迁移包中有 proxychains 配置则恢复
+# Restore proxychains config from migration pack if available
 if [ -f ~/migration-tmp/openclaw-config/proxychains4.conf ]; then
     sudo cp ~/migration-tmp/openclaw-config/proxychains4.conf /etc/proxychains4.conf
-    echo "✅ proxychains4.conf 已恢复"
+    echo "✅ proxychains4.conf restored"
 else
-    echo "ℹ️  未找到 proxychains4.conf，使用默认配置"
+    echo "ℹ️  proxychains4.conf not found, using default config"
 fi
 \`\`\`
 
 ---
 
-## Step 7：检查 Claude Code nvm wrapper
+## Step 7: Check Claude Code nvm wrapper
 
 \`\`\`bash
 CLAUDE_BIN=~/.npm-global/bin/claude
 
-# 检查是否是 nvm wrapper（应包含 nvm 相关内容）
+# Check if it's an nvm wrapper (should contain nvm-related content)
 if [ -f "\$CLAUDE_BIN" ]; then
     if grep -q 'nvm' "\$CLAUDE_BIN" 2>/dev/null; then
-        echo "✅ Claude Code 已是 nvm wrapper"
+        echo "✅ Claude Code is already an nvm wrapper"
     else
-        echo "⚠️  Claude Code 不是 nvm wrapper，正在重建..."
+        echo "⚠️  Claude Code is not an nvm wrapper, rebuilding..."
         CLAUDE_ACTUAL=\$(find ~/.nvm -name 'claude' -type f 2>/dev/null | head -1)
         if [ -n "\$CLAUDE_ACTUAL" ]; then
             cat > "\$CLAUDE_BIN" << 'WRAPPER'
@@ -174,100 +174,100 @@ nvm use 22 --silent 2>/dev/null || true
 exec "\$(dirname "\$(readlink -f "\$0")")/../../lib/node_modules/@anthropic-ai/claude-code/cli.js" "\$@"
 WRAPPER
             chmod +x "\$CLAUDE_BIN"
-            echo "✅ nvm wrapper 已重建"
+            echo "✅ nvm wrapper rebuilt"
         else
-            echo "ℹ️  未找到 claude 实际路径，跳过 wrapper 重建"
+            echo "ℹ️  claude binary not found, skipping wrapper rebuild"
         fi
     fi
 else
-    echo "⚠️  未找到 \$CLAUDE_BIN"
+    echo "⚠️  \$CLAUDE_BIN not found"
 fi
 \`\`\`
 
 ---
 
-## Step 8：启动 OpenClaw Gateway
+## Step 8: Start OpenClaw Gateway
 
 \`\`\`bash
-# 启动
+# Start
 openclaw gateway start
 
-# 等待启动
+# Wait for startup
 sleep 3
 
-# 配置 systemd 开机自启
+# Configure systemd autostart
 systemctl --user daemon-reload
 systemctl --user enable openclaw-gateway 2>/dev/null || true
 systemctl --user start openclaw-gateway 2>/dev/null || true
 
-# 防止退出 SSH 后服务被杀
+# Prevent service from being killed after SSH logout
 sudo loginctl enable-linger \$USER
 
-echo "✅ OpenClaw Gateway 已启动"
+echo "✅ OpenClaw Gateway started"
 openclaw gateway status
 \`\`\`
 
 ---
 
-## Step 9：恢复 Dashboard（可选）
+## Step 9: Restore Dashboard (optional)
 
 \`\`\`bash
 if [ -d ~/migration-tmp/dashboard ]; then
-    echo "发现 Dashboard 数据，正在恢复..."
+    echo "Dashboard data found, restoring..."
     cp -r ~/migration-tmp/dashboard ~/openclaw-dashboard
 
-    # 安装 Python 依赖
+    # Install Python dependencies
     if [ -f ~/openclaw-dashboard/backend/requirements.txt ]; then
         pip3 install -r ~/openclaw-dashboard/backend/requirements.txt
     fi
 
-    echo "✅ Dashboard 已恢复到 ~/openclaw-dashboard/"
-    echo "ℹ️  请手动配置 systemd service 以开机自启 Dashboard"
+    echo "✅ Dashboard restored to ~/openclaw-dashboard/"
+    echo "ℹ️  Please manually configure a systemd service to auto-start the Dashboard"
 else
-    echo "ℹ️  迁移包中无 Dashboard，跳过"
+    echo "ℹ️  No Dashboard in migration pack, skipping"
 fi
 \`\`\`
 
 ---
 
-## Step 10：检查日志确认频道连接
+## Step 10: Check logs for channel connectivity
 
 \`\`\`bash
-echo "=== 最近 50 行 OpenClaw 日志 ==="
+echo "=== Last 50 lines of OpenClaw logs ==="
 journalctl --user -u openclaw-gateway --no-pager -n 50 2>/dev/null || \
     openclaw gateway logs 2>/dev/null || \
-    echo "无法获取日志，请手动检查"
+    echo "Unable to retrieve logs, please check manually"
 
-# 检查关键字
+# Check for key indicators
 echo ""
-echo "=== 连接状态检查 ==="
+echo "=== Connection status check ==="
 journalctl --user -u openclaw-gateway --no-pager -n 200 2>/dev/null | grep -Ei 'discord|feishu|connected|error|failed' | tail -20 || true
 \`\`\`
 
 ---
 
-## Step 11：清理迁移文件
+## Step 11: Clean up migration files
 
 \`\`\`bash
-echo "正在清理敏感的迁移文件..."
+echo "Cleaning up sensitive migration files..."
 rm -rf ~/migration-tmp
 rm -f ~/openclaw-migration-pack.tar.gz
 rm -f ~/setup.sh
-echo "✅ 迁移临时文件已清理"
-echo "ℹ️  migration-instructions.md 保留作为参考"
+echo "✅ Migration temp files cleaned up"
+echo "ℹ️  migration-instructions.md kept for reference"
 \`\`\`
 
 ---
 
-## 完成后汇报
+## Post-completion report
 
-所有步骤完成后，请汇报：
-1. OpenClaw 运行状态（\`openclaw gateway status\`）
-2. systemd 服务状态（\`systemctl --user status openclaw-gateway\`）
-3. 日志中是否有 Discord/飞书连接成功的信息
-4. 是否有任何步骤失败或需要用户手动处理的事项
+After all steps are complete, please report:
+1. OpenClaw running status (\`openclaw gateway status\`)
+2. systemd service status (\`systemctl --user status openclaw-gateway\`)
+3. Whether logs show successful Discord/Feishu connection
+4. Any steps that failed or require manual user intervention
 
-如有失败步骤，详细说明错误信息和建议的解决方案。
+For any failed steps, provide detailed error messages and recommended solutions.
 HEREDOC
 
-echo -e "${GREEN}✅ migration-instructions.md 已生成：$OUTPUT${NC}"
+echo -e "${GREEN}✅ migration-instructions.md generated: $OUTPUT${NC}"
