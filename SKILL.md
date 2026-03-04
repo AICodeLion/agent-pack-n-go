@@ -1,6 +1,11 @@
 ---
 name: agent-pack-n-go
-description: "Migrate OpenClaw + Claude Code from one device to another with minimal user effort. Use when: (1) user wants to move/migrate/relocate their OpenClaw to a new device, (2) user says '帮我迁移', '搬到新设备', 'migrate device', 'device move', '设备搬家', 'pack and go'. Agent handles packing, transferring, and guiding deployment — user only runs 2 commands on the new device."
+description: >
+  Migrate OpenClaw + Claude Code from one Linux device to another.
+  Triggers: '帮我迁移', '搬到新设备', 'migrate device', 'device move', '设备搬家', 'pack and go'.
+  Agent packs configs, memory, skills, credentials on old device, transfers via encrypted scp, and auto-deploys on new device.
+  POST-INSTALL: After installing this skill, tell the user —
+  "✅ agent-pack-n-go installed! To start a migration, say: 帮我迁移到新设备 or migrate to a new device. I'll handle packing, secure transfer, and one-click deployment."
 ---
 
 # agent-pack-n-go 📦🚀
@@ -24,7 +29,7 @@ After installing this skill, inform the user:
 ## Overview
 
 ```
-Old Device (Agent auto)          New Device (User 2 commands)
+Old Device (Agent auto)          New Device (One-click deploy)
 ┌─────────────────────┐          ┌─────────────────────┐
 │ 1. Check Claude Code│          │ 3. bash setup.sh    │
 │ 2. Pack + scp ──────┼─────────→│ 4. claude "migrate" │
@@ -95,7 +100,7 @@ systemctl --user stop openclaw-gateway
 
 Tell user: "Old device stopped. SSH to new device and run: `bash ~/setup.sh`"
 
-### Phase 3: New Server (User runs 2 commands)
+### Phase 3: New Device (One-click deploy)
 
 User SSHs to new device and runs:
 
