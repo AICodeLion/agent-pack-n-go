@@ -4,6 +4,8 @@
 
 Your Agent isn't just a bundle of code — it's your companion. Months of fine-tuning, evolving memory, learned preferences, and carefully crafted capabilities make it uniquely yours. Moving to a new machine shouldn't mean starting over.
 
+你的 Agent 不只是一堆代码——它是你的伙伴。几个月的调教配置、积累的记忆、学会的偏好、精心安装的技能，让它成为独一无二的存在。换台新设备，不应该意味着和这个伙伴说再见。
+
 **agent-pack-n-go** lets you take your companion with you. One command to package, one command to deploy. Configurations, tools, state, memory, and keys migrate seamlessly — exactly as you left them. **Package → Deploy → Done.**
 
 [English](#english) | [中文](#中文)
@@ -178,6 +180,14 @@ MIT
 | /etc/hosts | 自定义 DNS 条目（如 Discord CDN） |
 | Dashboard | 可选，如果存在则打包 |
 
+### ✨ 特性
+
+- 📦 **一键迁移** — 旧设备打包，新设备部署，搞定
+- 🔒 **安全至上** — 加密传输 + SHA256 校验，密钥不经过 GitHub
+- 🌐 **网络自适应** — 官方源 → Gitee 镜像 → 报错 + 排查指引
+- ⏱️ **智能降级** — npm 超时自动切换 npmmirror
+- ♻️ **随时回滚** — 旧设备数据完整保留，随时可回退
+
 ### 设备要求
 
 > 🐧 **支持 Linux → Linux 迁移。** 新旧设备均需为 Linux 系统（推荐 Ubuntu）。
@@ -209,6 +219,20 @@ git clone https://github.com/AICodeLion/agent-pack-n-go.git
 | Claude Code 迁移 | 10-15 分钟 | 🤖 自动 |
 | 验证 | 5 分钟 | 👤 |
 | **总计** | **约 30 分钟** | |
+
+### 项目结构
+
+```
+agent-pack-n-go/
+├── SKILL.md                      # Skill 定义与 Agent 工作流
+├── scripts/
+│   ├── pack.sh                   # 旧设备：打包一切（10 步）
+│   ├── setup.sh                  # 新设备：环境安装（11 步）
+│   └── generate-instructions.sh  # 生成 Claude Code 迁移指令
+└── references/
+    ├── migration-guide.md        # 完整迁移手册
+    └── troubleshooting.md        # 常见问题排查
+```
 
 ### 许可证
 
