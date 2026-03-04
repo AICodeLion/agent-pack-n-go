@@ -2,10 +2,10 @@
 # Post-install welcome message for agent-pack-n-go
 
 echo ""
-echo "  ✅ agent-pack-n-go — installed"
+echo "  ✅ agent-pack-n-go 安装成功！"
 echo ""
-echo "  Migrate your OpenClaw agent to a new device."
-echo "  Configs, memory, skills, keys — one command, fully restored."
+echo "  把你的 OpenClaw Agent 一键迁移到新的 Linux 设备，"
+echo "  配置、记忆、技能、密钥——全部自动恢复。"
 echo ""
-echo "  To start, say: \"帮我迁移到新设备\" or \"migrate to a new device\""
+echo "  使用方法：对我说「帮我迁移到新设备」即可开始。"
 echo ""
