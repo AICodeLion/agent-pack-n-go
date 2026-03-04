@@ -47,7 +47,7 @@ Old Server (Agent auto)           New Server (You: 2 commands)
 
 **New server:**
 - Ubuntu 22.04 / 24.04
-- 2-core CPU, 8GB+ RAM
+- 2-core CPU, 2GB+ RAM
 - SSH access with sudo
 
 **Old server:**
@@ -150,7 +150,7 @@ MIT
 ### 新服务器要求
 
 - Ubuntu 22.04 / 24.04
-- 2 核 CPU，8GB+ 内存
+- 2 核 CPU，2GB+ 内存
 - SSH 登录 + sudo 权限
 
 ### 安装

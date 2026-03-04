@@ -27,7 +27,7 @@ Old Server (Agent auto)          New Server (User 2 commands)
 Ask user for:
 1. **New server IP** + SSH user + password/key
 2. **New server OS** (must be Ubuntu 22.04/24.04)
-3. **Confirm**: 2-core CPU, 8GB+ RAM
+3. **Confirm**: 2-core CPU, 2GB+ RAM
 
 Warn user:
 - ⚠️ Discord Bot will be offline for ~5-10 min during switch (same token can't run on two servers)

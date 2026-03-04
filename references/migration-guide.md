@@ -37,7 +37,7 @@ Phase 5: Cleanup
 ### 1.1 New server requirements
 
 - [ ] **Operating system**: Ubuntu 22.04 / 24.04 (recommended)
-- [ ] **Resources**: 2-core CPU, 8GB+ RAM
+- [ ] **Resources**: 2-core CPU, 2GB+ RAM
 - [ ] **SSH access**: User with root or sudo privileges
 - [ ] **Network**:
   - Can access npm registry (npmmirror available for China networks)
