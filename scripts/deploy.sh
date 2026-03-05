@@ -346,7 +346,7 @@ fi
 
 echo ""
 if ! command -v qmd > /dev/null 2>&1; then
-    echo -e "  ${YELLOW}ℹ️  qmd is not in PATH. Install it manually if needed (e.g. npm install -g qmd).${NC}"
+    echo -e "  ${YELLOW}ℹ️  qmd (memory search) 未安装。可选安装: npm install -g @tobilu/qmd${NC}"
 fi
 echo -e "  Next: verify Discord/Feishu connectivity, then stop old device."
 echo ""
