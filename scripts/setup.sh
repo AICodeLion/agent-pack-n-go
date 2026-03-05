@@ -240,7 +240,7 @@ echo -n "[9/${TOTAL}] Restoring Claude Code config from migration pack..."
 if [ -f "$PACK_FILE" ]; then
     mkdir -p ~/.claude
     mkdir -p /tmp/setup-extract-$$
-    tar xzf "$PACK_FILE" -C /tmp/setup-extract-$$ --wildcards 'claude-config/*' 'manifest.sha256' 2>/dev/null || true
+    tar xzf "$PACK_FILE" -C /tmp/setup-extract-$$ --wildcards './claude-config/*' './manifest.sha256' 2>/dev/null || true
     if [ -d "/tmp/setup-extract-$$/claude-config" ]; then
         # Verify critical file integrity
         if [ -f "/tmp/setup-extract-$$/manifest.sha256" ]; then
@@ -271,7 +271,7 @@ echo -n "[10/${TOTAL}] Restoring SSH keys from migration pack..."
 if [ -f "$PACK_FILE" ]; then
     mkdir -p ~/.ssh
     mkdir -p /tmp/setup-extract-$$
-    tar xzf "$PACK_FILE" -C /tmp/setup-extract-$$ --wildcards 'ssh-keys/*' 2>/dev/null || true
+    tar xzf "$PACK_FILE" -C /tmp/setup-extract-$$ --wildcards './ssh-keys/*' 2>/dev/null || true
     if [ -d "/tmp/setup-extract-$$/ssh-keys" ]; then
         cp -r /tmp/setup-extract-$$/ssh-keys/. ~/.ssh/
         SSH_RESTORED=$(find /tmp/setup-extract-$$/ssh-keys -maxdepth 1 -name 'id_*' ! -name '*.pub' 2>/dev/null | xargs -I{} basename {} | tr '\n' ', ' | sed 's/,$//')
