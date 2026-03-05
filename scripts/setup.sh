@@ -10,6 +10,38 @@ NC='\033[0m'
 PACK_FILE=~/openclaw-migration-pack.tar.gz
 TOTAL=11
 
+# ─── Spinner ─────────────────────────────────────────────────────────────────
+# Usage: run_with_spinner "label" cmd [args...]
+# Runs cmd in background, shows spinner until done.
+# Exit code of cmd is preserved.
+_SPINNER_FRAMES='⠋⠙⠹⠸⠼⠴⠦⠧⠇⠏'
+run_with_spinner() {
+    local label="$1"
+    shift
+    local log_file
+    log_file=$(mktemp)
+    # Run command in background
+    "$@" > "$log_file" 2>&1 &
+    local pid=$!
+    local i=0
+    local frame
+    # Trap to clean up spinner on exit
+    trap 'tput cnorm 2>/dev/null; rm -f "$log_file"' RETURN
+    tput civis 2>/dev/null || true  # hide cursor
+    while kill -0 "$pid" 2>/dev/null; do
+        frame="${_SPINNER_FRAMES:$((i % ${#_SPINNER_FRAMES})):1}"
+        printf "\r  %s %s" "$frame" "$label"
+        i=$((i + 1))
+        sleep 0.1
+    done
+    wait "$pid"
+    local exit_code=$?
+    tput cnorm 2>/dev/null || true  # restore cursor
+    printf "\r"  # clear spinner line
+    rm -f "$log_file"
+    return "$exit_code"
+}
+
 die() {
     echo -e "${RED}❌ Error: $1${NC}" >&2
     exit 1
@@ -38,8 +70,8 @@ else
 fi
 
 # ─── [2/11] Install base dependencies ───────────────────────────────────────
-echo -n "[2/${TOTAL}] Installing base dependencies (git, curl, python3)..."
-if sudo apt-get install -y git curl python3 python3-pip > /dev/null 2>&1; then
+printf "[2/${TOTAL}] Installing base dependencies (git, curl, python3)..."
+if run_with_spinner "Installing base dependencies..." sudo apt-get install -y git curl python3 python3-pip; then
     ok
 else
     fail "apt-get install failed, please check network or sudo permissions"
@@ -66,9 +98,11 @@ else
     echo -e " ${YELLOW}⚠️  Not found, installing nvm...${NC}"
     NVM_VERSION="v0.40.3"
     # Three-tier fallback: official → Gitee mirror → error
-    if curl -fsSL --connect-timeout 15 "https://raw.githubusercontent.com/nvm-sh/nvm/${NVM_VERSION}/install.sh" | bash 2>/dev/null; then
+    _nvm_install_official() { curl -fsSL --connect-timeout 15 "https://raw.githubusercontent.com/nvm-sh/nvm/${NVM_VERSION}/install.sh" | bash; }
+    _nvm_install_gitee()    { curl -fsSL --connect-timeout 15 "https://gitee.com/mirrors/nvm/raw/${NVM_VERSION}/install.sh" | bash; }
+    if run_with_spinner "Installing nvm (official)..." _nvm_install_official 2>/dev/null; then
         echo -e "[4/${TOTAL}] nvm installed (official source) ${GREEN}✅${NC}"
-    elif curl -fsSL --connect-timeout 15 "https://gitee.com/mirrors/nvm/raw/${NVM_VERSION}/install.sh" | bash 2>/dev/null; then
+    elif run_with_spinner "Installing nvm (Gitee mirror)..." _nvm_install_gitee 2>/dev/null; then
         echo -e "[4/${TOTAL}] nvm installed (Gitee mirror) ${GREEN}✅${NC}"
     else
         fail "nvm installation failed, please check network connectivity. You may need to configure a proxy or install nvm manually: https://github.com/nvm-sh/nvm#installing-and-updating"
@@ -77,18 +111,25 @@ else
 fi
 
 # ─── [5/11] Install Node.js 22 ───────────────────────────────────────────────
-echo -n "[5/${TOTAL}] Installing Node.js 22..."
+printf "[5/${TOTAL}] Installing Node.js 22..."
 if node --version 2>/dev/null | grep -q '^v22'; then
     echo -e " ${GREEN}✅ Already v22 ($(node --version))${NC}"
 else
     if [ "$USE_MIRROR" = true ]; then
-        NVM_NODEJS_ORG_MIRROR="https://npmmirror.com/mirrors/node" nvm install 22 > /dev/null 2>&1 || fail "Node.js 22 installation failed"
+        if run_with_spinner "Installing Node.js 22 (npmmirror)..." bash -c 'NVM_NODEJS_ORG_MIRROR="https://npmmirror.com/mirrors/node" nvm install 22'; then
+            ok
+        else
+            fail "Node.js 22 installation failed"
+        fi
     else
-        nvm install 22 > /dev/null 2>&1 || fail "Node.js 22 installation failed"
+        if run_with_spinner "Installing Node.js 22..." nvm install 22; then
+            ok
+        else
+            fail "Node.js 22 installation failed"
+        fi
     fi
     nvm alias default 22
     nvm use 22
-    ok
 fi
 
 # ─── [6/11] Configure npm global path ───────────────────────────────────────
@@ -112,16 +153,16 @@ else
 fi
 
 # ─── [7/11] Install Claude Code ──────────────────────────────────────────────
-echo -n "[7/${TOTAL}] Installing Claude Code..."
+printf "[7/${TOTAL}] Installing Claude Code..."
 if command -v claude > /dev/null 2>&1; then
     echo -e " ${GREEN}✅ Already installed ($(claude --version 2>/dev/null || echo 'unknown'))${NC}"
 else
-    if timeout 120 npm install -g @anthropic-ai/claude-code > /dev/null 2>&1; then
+    if run_with_spinner "Installing Claude Code..." timeout 120 npm install -g @anthropic-ai/claude-code; then
         ok
     else
         echo -e " ${YELLOW}⚠️  Install timeout, trying npmmirror...${NC}"
         npm config set registry https://registry.npmmirror.com
-        if timeout 120 npm install -g @anthropic-ai/claude-code > /dev/null 2>&1; then
+        if run_with_spinner "Installing Claude Code (npmmirror)..." timeout 120 npm install -g @anthropic-ai/claude-code; then
             echo -e "[7/${TOTAL}] Claude Code installed (npmmirror) ${GREEN}✅${NC}"
         else
             fail "Claude Code installation failed, please check network"
@@ -179,8 +220,8 @@ else
 fi
 
 # ─── [10/11] Install basic tools ─────────────────────────────────────────────
-echo -n "[10/${TOTAL}] Installing auxiliary tools (proxychains4)..."
-if sudo apt-get install -y proxychains4 > /dev/null 2>&1; then
+printf "[10/${TOTAL}] Installing auxiliary tools (proxychains4)..."
+if run_with_spinner "Installing proxychains4..." sudo apt-get install -y proxychains4; then
     ok
 else
     echo -e " ${YELLOW}⚠️  proxychains4 installation failed (optional, can be installed manually later)${NC}"

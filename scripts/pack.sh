@@ -119,9 +119,16 @@ cd ~
 
 # ─── [9/10] Create tarball ───────────────────────────────────────────────────
 step=$((step+1))
-echo -n "[${step}/${TOTAL}] Creating openclaw-migration-pack.tar.gz..."
-tar czf "$PACK_FILE" -C "$TMP_DIR" .
-echo -e " ${GREEN}✅${NC}"
+TAR_START=$(date +%s)
+if command -v pv > /dev/null 2>&1; then
+    echo "[${step}/${TOTAL}] Creating openclaw-migration-pack.tar.gz (pv)..."
+    tar cz -C "$TMP_DIR" . | pv -s "$(du -sb "$TMP_DIR" | cut -f1)" > "$PACK_FILE"
+else
+    echo -n "[${step}/${TOTAL}] Creating openclaw-migration-pack.tar.gz (packing...)..."
+    tar czf "$PACK_FILE" -C "$TMP_DIR" .
+fi
+TAR_END=$(date +%s)
+echo -e "[${step}/${TOTAL}] Packed in $((TAR_END - TAR_START))s ${GREEN}✅${NC}"
 
 # Clean up tmp
 rm -rf "$TMP_DIR"
@@ -133,29 +140,37 @@ sha256sum "$PACK_FILE" > ~/openclaw-migration-pack.sha256
 echo -e " ${GREEN}✅${NC}"
 
 PACK_SIZE=$(du -sh "$PACK_FILE" | cut -f1)
-echo ""
-echo -e "${GREEN}========================================"
-echo -e "  Packing complete!"
-echo -e "========================================${NC}"
-echo ""
-echo "  File: $PACK_FILE"
-echo "  Size: $PACK_SIZE"
-echo "  Checksum: ~/openclaw-migration-pack.sha256"
-echo ""
 
 # Copy scripts to home for transfer
 cp "$(dirname "$0")/setup.sh" ~/setup.sh
 chmod +x ~/setup.sh
-echo -e "${GREEN}✅ setup.sh copied to ~/setup.sh${NC}"
 
 # Generate migration instructions
-echo ""
 echo -n "Generating migration-instructions.md..."
 OLD_USER=$(whoami)
 bash "$(dirname "$0")/generate-instructions.sh" "$OLD_USER"
 echo -e " ${GREEN}✅${NC}"
 
+# ─── Summary ─────────────────────────────────────────────────────────────────
+SETUP_SIZE=$(du -sh ~/setup.sh | cut -f1)
+INSTR_SIZE=$(du -sh ~/migration-instructions.md 2>/dev/null | cut -f1 || echo "N/A")
+CHKSUM_SIZE=$(du -sh ~/openclaw-migration-pack.sha256 | cut -f1)
+
 echo ""
-echo -e "${GREEN}Next: scp these files to the new device:${NC}"
-echo "  scp ~/openclaw-migration-pack.tar.gz ~/openclaw-migration-pack.sha256 ~/setup.sh ~/migration-instructions.md USER@NEW_IP:~/"
+echo -e "${GREEN}========================================${NC}"
+echo -e "${GREEN}  ✅ Packing complete!${NC}"
+echo -e "${GREEN}========================================${NC}"
+echo ""
+echo -e "  📦 产出文件（全部在 ${YELLOW}$HOME/${NC}）:"
+echo ""
+echo -e "    1. ${YELLOW}openclaw-migration-pack.tar.gz${NC}  ${PACK_SIZE}  ← 主迁移包"
+echo -e "    2. ${YELLOW}openclaw-migration-pack.sha256${NC}  ${CHKSUM_SIZE}  ← 校验文件"
+echo -e "    3. ${YELLOW}setup.sh${NC}                        ${SETUP_SIZE}  ← 新设备一键部署脚本"
+echo -e "    4. ${YELLOW}migration-instructions.md${NC}       ${INSTR_SIZE}  ← Claude Code 迁移指令"
+echo ""
+echo -e "  🚀 下一步：传输到新设备"
+echo -e "    ${YELLOW}bash $(dirname "$0")/transfer.sh USER@NEW_IP${NC}"
+echo ""
+echo -e "  或手动 scp:"
+echo -e "    scp ~/openclaw-migration-pack.tar.gz ~/openclaw-migration-pack.sha256 ~/setup.sh ~/migration-instructions.md USER@NEW_IP:~/"
 echo ""

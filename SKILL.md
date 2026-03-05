@@ -78,7 +78,7 @@ See `scripts/pack.sh` for details.
 #### 2.3 Transfer to new device
 
 ```bash
-scp ~/openclaw-migration-pack.tar.gz ~/openclaw-migration-pack.sha256 ~/setup.sh ~/migration-instructions.md USER@NEW_IP:~/
+bash <SKILL_DIR>/scripts/transfer.sh USER@NEW_IP
 ```
 
 #### 2.4 Stop old device
