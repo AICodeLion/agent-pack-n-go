@@ -78,7 +78,7 @@ Most tools **back up** your agent's data. We **clone** the entire agent — it w
 | **Network diagnostics** | ✅ Direct/proxy auto-detect | ❌ | ❌ | ❌ | ❌ |
 | **Zero third-party** | ✅ Pure SSH | ❌ Cloud sync | ❌ GitHub | ❌ GitHub | ✅ |
 | **Graceful degradation** | ✅ No sudo/rsync? Still works | ❓ | ❌ | ❌ | ❌ |
-| **Cross-framework** | ❌ OpenClaw only | ✅ Any → Any | ❌ | ❌ | ❌ |
+| **Cross-framework** | 🔧 Adaptable (swap deploy script) | ✅ Built-in adapters | ❌ | ❌ | ❌ |
 | **Integrity check** | ✅ Triple SHA256 | ✅ | ❌ | ❌ (git hash) | ❌ |
 
 ### The key difference
@@ -239,7 +239,7 @@ MIT
 | **网络诊断** | ✅ 直连/代理自动检测 | ❌ | ❌ | ❌ | ❌ |
 | **零第三方** | ✅ 纯 SSH | ❌ 云同步 | ❌ GitHub | ❌ GitHub | ✅ |
 | **优雅降级** | ✅ 无 sudo/rsync 也能跑 | ❓ | ❌ | ❌ | ❌ |
-| **跨框架** | ❌ 仅 OpenClaw | ✅ 任意 → 任意 | ❌ | ❌ | ❌ |
+| **跨框架** | 🔧 可适配（替换 deploy 脚本） | ✅ 内置适配器 | ❌ | ❌ | ❌ |
 | **完整性校验** | ✅ 三重 SHA256 | ✅ | ❌ | ❌ (git hash) | ❌ |
 
 ### 核心区别
