@@ -10,7 +10,7 @@ NC='\033[0m'
 PACK_FILE=~/openclaw-migration-pack.tar.gz
 TMP_DIR=~/openclaw-migration-tmp
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
-TOTAL=10
+TOTAL=11
 PROGRESS_FILE="/tmp/openclaw-pack-progress.txt"
 
 # Initialize progress file for external monitoring (e.g., agent polling)
@@ -33,7 +33,7 @@ mkdir -p "$TMP_DIR"/{openclaw-config,claude-config,ssh-keys}
 
 step=0
 
-# ─── [1/8] Pack ~/.openclaw/ ─────────────────────────────────────────────────
+# ─── [1/11] Pack ~/.openclaw/ ────────────────────────────────────────────────
 step=$((step+1))
 update_progress "${step}/${TOTAL} 打包 OpenClaw 配置..."
 echo -n "[${step}/${TOTAL}] Packing ~/.openclaw/ config..."
@@ -58,7 +58,7 @@ else
     echo -e " ${YELLOW}⚠️  ~/.openclaw/ not found, skipping${NC}"
 fi
 
-# ─── [2/8] Pack ~/.claude/ ───────────────────────────────────────────────────
+# ─── [2/11] Pack ~/.claude/ ──────────────────────────────────────────────────
 step=$((step+1))
 update_progress "${step}/${TOTAL} 打包 Claude Code 配置..."
 echo -n "[${step}/${TOTAL}] Packing ~/.claude/ (Claude Code config)..."
@@ -71,7 +71,7 @@ else
     echo -e " ${YELLOW}⚠️  ~/.claude/ not found, skipping${NC}"
 fi
 
-# ─── [3/8] Pack ~/.ssh/ ──────────────────────────────────────────────────────
+# ─── [3/11] Pack ~/.ssh/ ─────────────────────────────────────────────────────
 step=$((step+1))
 update_progress "${step}/${TOTAL} 打包 SSH 密钥..."
 echo -n "[${step}/${TOTAL}] Packing ~/.ssh/ (SSH keys)..."
@@ -86,19 +86,19 @@ else
     echo -e " ${YELLOW}⚠️  ~/.ssh/ not found, skipping${NC}"
 fi
 
-# ─── [4/8] Export crontab ────────────────────────────────────────────────────
+# ─── [4/11] Export crontab ───────────────────────────────────────────────────
 step=$((step+1))
 update_progress "${step}/${TOTAL} 导出 crontab..."
 echo -n "[${step}/${TOTAL}] Exporting crontab..."
 if crontab -l > "$TMP_DIR/crontab-backup.txt" 2>/dev/null; then
-    CRON_COUNT=$(grep -c '[^[:space:]]' "$TMP_DIR/crontab-backup.txt" 2>/dev/null | grep -v '^#' || echo 0)
+    CRON_COUNT=$(grep -v "^#" "$TMP_DIR/crontab-backup.txt" 2>/dev/null | grep -c "[^[:space:]]" || echo 0)
     echo -e " ${GREEN}✅${NC} (${CRON_COUNT} 条任务)"
 else
     echo "# no crontab" > "$TMP_DIR/crontab-backup.txt"
     echo -e " ${YELLOW}⚠️  crontab is empty, created empty file${NC}"
 fi
 
-# ─── [5/8] Export /etc/hosts custom entries ──────────────────────────────────
+# ─── [5/11] Export /etc/hosts custom entries ─────────────────────────────────
 step=$((step+1))
 update_progress "${step}/${TOTAL} 导出 hosts 配置..."
 echo -n "[${step}/${TOTAL}] Exporting /etc/hosts custom entries (discord|cdn)..."
@@ -114,7 +114,7 @@ else
     echo -e " ${YELLOW}⚠️  No discord/cdn entries found, created empty file${NC}"
 fi
 
-# ─── [6/8] Pack Dashboard (optional) ────────────────────────────────────────
+# ─── [6/11] Pack Dashboard (optional) ───────────────────────────────────────
 step=$((step+1))
 update_progress "${step}/${TOTAL} 检查 Dashboard..."
 echo -n "[${step}/${TOTAL}] Checking ~/openclaw-dashboard/..."
@@ -125,23 +125,26 @@ else
     echo -e " ${YELLOW}⚠️  ~/openclaw-dashboard/ not found, skipping${NC}"
 fi
 
-# ─── [7/8] Record old username ───────────────────────────────────────────────
+# ─── [7/11] Record old username ──────────────────────────────────────────────
 step=$((step+1))
 update_progress "${step}/${TOTAL} 记录用户名..."
 echo -n "[${step}/${TOTAL}] Recording old device username..."
 whoami > "$TMP_DIR/old_user.txt"
 echo -e " ${GREEN}✅ ($(cat "$TMP_DIR/old_user.txt"))${NC}"
 
-# ─── [8/10] Generate manifest checksum ───────────────────────────────────────
+# ─── [8/11] Generate manifest checksum ──────────────────────────────────────
 step=$((step+1))
 update_progress "${step}/${TOTAL} 生成校验文件..."
 echo -n "[${step}/${TOTAL}] Generating critical file checksums (manifest.sha256)..."
 cd "$TMP_DIR"
 MANIFEST_FILES=""
-for f in openclaw-config/openclaw.json claude-config/settings.json ssh-keys/id_ed25519 crontab-backup.txt; do
+for f in openclaw-config/openclaw.json claude-config/settings.json crontab-backup.txt; do
     if [ -f "$f" ]; then
         MANIFEST_FILES="$MANIFEST_FILES $f"
     fi
+done
+for key in ssh-keys/id_*; do
+    [[ -f "$key" && "$key" != *.pub ]] && MANIFEST_FILES="$MANIFEST_FILES $key"
 done
 if [ -n "$MANIFEST_FILES" ]; then
     sha256sum $MANIFEST_FILES > manifest.sha256
@@ -152,7 +155,7 @@ else
 fi
 cd ~
 
-# ─── [9/10] Create tarball ───────────────────────────────────────────────────
+# ─── [9/11] Create tarball ───────────────────────────────────────────────────
 step=$((step+1))
 TAR_START=$(date +%s)
 if command -v pv > /dev/null 2>&1; then
@@ -170,7 +173,7 @@ echo -e "[${step}/${TOTAL}] Packed in $((TAR_END - TAR_START))s ${GREEN}✅${NC}
 # Clean up tmp
 rm -rf "$TMP_DIR"
 
-# ─── [10/10] Generate pack checksum ─────────────────────────────────────────
+# ─── [10/11] Generate pack checksum ─────────────────────────────────────────
 step=$((step+1))
 update_progress "${step}/${TOTAL} 生成 SHA256..."
 echo -n "[${step}/${TOTAL}] Generating pack SHA256 checksum..."
@@ -183,8 +186,17 @@ PACK_SIZE=$(du -sh "$PACK_FILE" | cut -f1)
 cp "$SCRIPT_DIR/setup.sh" ~/setup.sh
 chmod +x ~/setup.sh
 
-# Generate migration instructions
-echo -n "Generating migration-instructions.md..."
+# ─── [11/11] Copy deploy.sh to home ─────────────────────────────────────────
+step=$((step+1))
+update_progress "${step}/${TOTAL} 复制 deploy.sh..."
+echo -n "[${step}/${TOTAL}] Copying deploy.sh to ~/..."
+cp "$SCRIPT_DIR/deploy.sh" ~/deploy.sh
+chmod +x ~/deploy.sh
+DEPLOY_SIZE=$(du -sh ~/deploy.sh | cut -f1)
+echo -e " ${GREEN}✅${NC} (${DEPLOY_SIZE})"
+
+# Generate migration instructions (fallback doc)
+echo -n "Generating migration-instructions.md (fallback doc)..."
 OLD_USER=$(whoami)
 bash "$SCRIPT_DIR/generate-instructions.sh" "$OLD_USER"
 echo -e " ${GREEN}✅${NC}"
@@ -203,14 +215,15 @@ echo -e "  📦 产出文件（全部在 ${YELLOW}$HOME/${NC}）:"
 echo ""
 echo -e "    1. ${YELLOW}openclaw-migration-pack.tar.gz${NC}  ${PACK_SIZE}  ← 主迁移包"
 echo -e "    2. ${YELLOW}openclaw-migration-pack.sha256${NC}  ${CHKSUM_SIZE}  ← 校验文件"
-echo -e "    3. ${YELLOW}setup.sh${NC}                        ${SETUP_SIZE}  ← 新设备一键部署脚本"
-echo -e "    4. ${YELLOW}migration-instructions.md${NC}       ${INSTR_SIZE}  ← Claude Code 迁移指令"
+echo -e "    3. ${YELLOW}setup.sh${NC}                        ${SETUP_SIZE}  ← 新设备基础环境脚本"
+echo -e "    4. ${YELLOW}deploy.sh${NC}                       ${DEPLOY_SIZE}  ← OpenClaw 部署脚本"
+echo -e "    5. ${YELLOW}migration-instructions.md${NC}       ${INSTR_SIZE}  ← 手动迁移备用文档"
 echo ""
 echo -e "  🚀 下一步：传输到新设备"
 echo -e "    ${YELLOW}bash $SCRIPT_DIR/transfer.sh USER@NEW_IP${NC}"
 echo ""
 echo -e "  或手动 scp:"
-echo -e "    scp ~/openclaw-migration-pack.tar.gz ~/openclaw-migration-pack.sha256 ~/setup.sh ~/migration-instructions.md USER@NEW_IP:~/"
+echo -e "    scp ~/openclaw-migration-pack.tar.gz ~/openclaw-migration-pack.sha256 ~/setup.sh ~/deploy.sh ~/migration-instructions.md USER@NEW_IP:~/"
 echo ""
 
 # Mark completion in progress file

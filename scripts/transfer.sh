@@ -12,6 +12,7 @@ FILES=(
     ~/openclaw-migration-pack.tar.gz
     ~/openclaw-migration-pack.sha256
     ~/setup.sh
+    ~/deploy.sh
     ~/migration-instructions.md
 )
 
@@ -121,8 +122,9 @@ echo -e "${GREEN}========================================"
 echo -e "  Transfer complete!"
 echo -e "========================================${NC}"
 echo ""
-echo "  Next: SSH to ${TARGET} and run:"
-echo -e "    ${YELLOW}bash ~/setup.sh${NC}"
+echo "  Next: agent will run remotely:"
+echo -e "    ${YELLOW}ssh ${TARGET} 'bash ~/setup.sh'${NC}"
+echo -e "    ${YELLOW}ssh ${TARGET} 'bash ~/deploy.sh'${NC}"
 echo ""
 
 update_progress "DONE ✅ 传输完成 (${TRANSFER_METHOD}, ${ELAPSED}s)"

@@ -6,7 +6,7 @@ Your Agent isn't just a bundle of code — it's your companion. Months of fine-t
 
 你的 Agent 不只是一堆代码——它是你的伙伴。几个月的调教配置、积累的记忆、学会的偏好、精心安装的技能，让它成为独一无二的存在。换台新设备，不应该意味着和这个伙伴说再见。
 
-**agent-pack-n-go** lets you take your companion with you. One command to package, one command to deploy. Configurations, tools, state, memory, and keys migrate seamlessly — exactly as you left them. **Package → Deploy → Done.**
+**agent-pack-n-go** lets your companion follow you anywhere. Just tell your agent where the new device is — it handles everything via SSH. Configurations, tools, state, memory, and keys migrate seamlessly. **Tell Agent → Watch It Go → Done.**
 
 [English](#english) | [中文](#中文)
 
@@ -17,20 +17,23 @@ Your Agent isn't just a bundle of code — it's your companion. Months of fine-t
 ## How It Works
 
 ```
-Old Device (Agent auto)           New Device (One-click deploy)
-┌──────────────────────┐          ┌──────────────────────┐
-│ 1. Check Claude Code │          │ 3. bash setup.sh     │
-│ 2. Pack + scp ───────┼─────────→│ 4. claude "migrate"  │
-│                      │   🔒     │    (auto completes)  │
-└──────────────────────┘  SHA256  └──────────────────────┘
-                                           ↓
-                                  Verify & done ✅
+Old Device (Agent controls everything)    New Device (SSH remote)
+┌──────────────────────────────────┐      ┌─────────────────────────┐
+│ 1. Pre-flight: ask IP + SSH user │      │                         │
+│ 2. pack.sh (pack configs)        │      │                         │
+│ 3. transfer.sh USER@HOST ────────┼─────→│ files arrive            │
+│ 4. ssh USER@HOST "bash setup.sh" │─────→│ (base env + Claude)     │
+│ 5. ssh USER@HOST "bash deploy.sh"│─────→│ (openclaw deployed)     │
+│ 6. Verify → stop old OpenClaw    │      │ ✅ New device running   │
+└──────────────────────────────────┘      └─────────────────────────┘
 ```
 
-1. 🔍 **Pre-flight** — Agent asks for new device SSH info and verifies requirements
-2. 📦 **Package** — Agent bundles configs, credentials, workspace, skills, memory, SSH keys, crontab into an integrity-verified migration pack
-3. 📡 **Transfer** — Encrypted `scp` to the new device (secrets never touch GitHub)
-4. 🚀 **Deploy** — Run `bash ~/setup.sh` on the new device — environment installs, integrity checks pass, Claude Code auto-completes the rest
+1. 🔍 **Pre-flight** — Agent asks for SSH info, you run `ssh-copy-id` once (one password input), agent verifies connectivity
+2. 📦 **Package** — `pack.sh` (11 steps) bundles everything with SHA256 checksums
+3. 📡 **Transfer** — `transfer.sh` uses rsync with progress (scp fallback), remote SHA256 verification
+4. 🔧 **Setup** — Agent SSH runs `setup.sh` (12 steps): apt update, nvm, node 22, Claude Code, restore configs
+5. 🚀 **Deploy** — Agent SSH runs `deploy.sh` (12 steps): extract, install OpenClaw, restore configs/hosts/crontab, start gateway
+6. ✅ **Verify** — Check connectivity, you confirm, agent stops old device
 
 > ⚠️ **Discord Bot note**: Same Bot Token can't run on two devices simultaneously. The agent stops the old device right before the new one starts (~5 min downtime).
 
@@ -43,14 +46,14 @@ Old Device (Agent auto)           New Device (One-click deploy)
 
 ## 🔒 Security
 
-All sensitive data transferred via encrypted `scp` with SHA256 integrity verification:
+All sensitive data transferred via rsync over SSH with triple SHA256 integrity verification:
 
 - API keys & model provider credentials
 - Discord bot tokens & Feishu AppSecret
 - SSH private keys & OAuth credentials
 - Agent memory & workspace data
 
-**Your secrets never touch GitHub.** Checksums verify both the full pack and each critical file individually.
+**Your secrets never touch GitHub.** Checksums verify the full pack at pack time, transfer time, and setup time.
 
 ## What Gets Migrated
 
@@ -65,11 +68,13 @@ All sensitive data transferred via encrypted `scp` with SHA256 integrity verific
 
 ## ✨ Features
 
-- 📦 **One-click migration** — Pack on old device, deploy on new device, done
-- 🔒 **Secure by design** — Encrypted transfer + SHA256 checksums, never GitHub
-- 🌐 **Network-resilient** — Official source → Gitee mirror → error with clear guidance
-- ⏱️ **Smart fallback** — npm timeout auto-switches to npmmirror
-- ♻️ **Rollback ready** — Old device untouched, restart anytime
+- 📦 **Agent handles everything** — Just provide SSH info; agent controls the full flow remotely
+- 🔒 **Triple SHA256 verification** — pack → transfer → setup, integrity checked at every stage
+- 📊 **Real-time progress** — Agent polls `/tmp` progress files and shows live updates in chat
+- 🌐 **China network auto-detection** — npmmirror, Gitee mirror, auto-selected based on region
+- 🔄 **rsync with progress** — scp fallback if rsync unavailable
+- ♻️ **Rollback ready** — tarball preserved after deploy, restart old device anytime
+- 🛡️ **sudo safety** — SUDO_OK detection, graceful skip when no passwordless sudo
 
 ## Requirements
 
@@ -98,22 +103,24 @@ Once installed, just say: **"帮我迁移到新设备"** or **"migrate to a new 
 
 | Step | Duration | Who |
 |------|----------|-----|
-| Pre-flight check | 2 min | 👤 Answer questions |
+| Pre-flight (SSH setup) | 3 min | 👤 ssh-copy-id + confirm |
 | Pack + transfer | 5 min | 🦁 Agent (auto) |
-| `bash setup.sh` | 5 min | 👤 One command |
-| Claude Code migration | 10-15 min | 🤖 Auto |
-| Verify | 5 min | 👤 |
-| **Total** | **~30 min** | |
+| Setup (base env) | 5-8 min | 🦁 Agent via SSH (auto) |
+| Deploy (OpenClaw) | 3-5 min | 🦁 Agent via SSH (auto) |
+| Verify & switch | 5 min | 👤 Confirm |
+| **Total** | **~25 min** | |
 
 ## Project Structure
 
 ```
 agent-pack-n-go/
-├── SKILL.md                      # Skill definition & agent workflow
+├── SKILL.md                      # Skill definition & 6-phase agent workflow
 ├── scripts/
-│   ├── pack.sh                   # Old device: package everything (10 steps)
-│   ├── setup.sh                  # New device: environment setup (11 steps)
-│   ├── generate-instructions.sh  # Generate Claude Code migration instructions
+│   ├── pack.sh                   # Old device: package everything (11 steps)
+│   ├── transfer.sh               # Old device: rsync to new device + SHA256 verify
+│   ├── setup.sh                  # New device: base environment (12 steps)
+│   ├── deploy.sh                 # New device: OpenClaw deployment (12 steps)
+│   ├── generate-instructions.sh  # Generate fallback migration doc
 │   └── welcome.sh                # Post-install welcome message
 └── references/
     ├── migration-guide.md        # Complete migration manual
@@ -132,7 +139,30 @@ MIT
 
 你的 Agent 不只是一堆代码——它是你的伙伴。几个月的调教配置、积累的记忆、学会的偏好、精心安装的技能，让它成为独一无二的存在。换台新设备，不应该意味着和这个伙伴说再见。
 
-**agent-pack-n-go** 让你带着伙伴一起走——一键打包、一键部署。配置、工具、状态、记忆、密钥，全部无缝迁移。**打包 → 部署 → 搞定。**
+**agent-pack-n-go** 让伙伴随你一起走。只要告诉 Agent 新设备在哪，剩下的它全搞定——通过 SSH 远程控制全部流程。配置、工具、状态、记忆、密钥，全部无缝迁移。**告诉 Agent → 看着它干 → 搞定。**
+
+### 迁移流程
+
+```
+旧设备（Agent 全程控制）                  新设备（SSH 远程）
+┌──────────────────────────────────┐      ┌─────────────────────────┐
+│ 1. 迁移前检查：询问 IP + 用户名  │      │                         │
+│ 2. pack.sh（打包配置）           │      │                         │
+│ 3. transfer.sh USER@HOST ────────┼─────→│ 文件到达                │
+│ 4. ssh USER@HOST "bash setup.sh" │─────→│（基础环境 + Claude）    │
+│ 5. ssh USER@HOST "bash deploy.sh"│─────→│（OpenClaw 部署完毕）    │
+│ 6. 验证 → 停止旧 OpenClaw        │      │ ✅ 新设备运行中         │
+└──────────────────────────────────┘      └─────────────────────────┘
+```
+
+1. 🔍 **迁移前检查** — Agent 询问 SSH 信息，你跑一次 `ssh-copy-id`（只需输一次密码），Agent 验证连通性
+2. 📦 **打包** — `pack.sh`（11 步）打包所有内容，生成 SHA256 校验值
+3. 📡 **传输** — `transfer.sh` 使用 rsync 带进度条传输（scp 兜底），远端 SHA256 验证
+4. 🔧 **安装环境** — Agent SSH 运行 `setup.sh`（12 步）：apt update、nvm、node 22、Claude Code、恢复配置
+5. 🚀 **部署** — Agent SSH 运行 `deploy.sh`（12 步）：解压、安装 OpenClaw、恢复配置/hosts/定时任务、启动网关
+6. ✅ **验证切换** — 检查连通性，你确认，Agent 停止旧设备
+
+> ⚠️ **Discord Bot 注意**：同一个 Bot Token 不能在两台设备同时运行。Agent 会在新设备启动前停止旧设备（约 5 分钟离线）。
 
 ### 🎯 什么时候用
 
@@ -143,34 +173,14 @@ MIT
 
 ### 🔒 安全第一
 
-所有敏感数据通过加密 `scp` 传输，SHA256 完整性校验：
+所有敏感数据通过 SSH 加密的 rsync 传输，三重 SHA256 完整性校验：
 
 - API Key 与模型服务凭证
 - Discord Bot Token、飞书 AppSecret
 - SSH 私钥、OAuth 凭证
 - Agent 记忆与工作区数据
 
-**密钥永远不经过 GitHub。** 同时校验整包和每个关键文件。
-
-### 迁移流程
-
-```
-旧设备（Agent 自动）              新设备（一键部署）
-┌──────────────────────┐          ┌──────────────────────┐
-│ 1. 检查 Claude Code  │          │ 3. bash setup.sh     │
-│ 2. 打包 + scp ───────┼─────────→│ 4. claude "迁移"     │
-│                      │   🔒     │    (自动完成)        │
-└──────────────────────┘  SHA256  └──────────────────────┘
-                                           ↓
-                                  验证通过 ✅
-```
-
-1. 🔍 **迁移前检查** — Agent 询问新设备 SSH 信息，确认环境要求
-2. 📦 **打包** — 配置、凭证、工作区、技能、记忆、SSH 密钥、定时任务，打成带 SHA256 校验的迁移包
-3. 📡 **传输** — `scp` 加密传输到新设备（密钥不经过 GitHub）
-4. 🚀 **部署** — SSH 登录新设备，运行 `bash ~/setup.sh` — 自动安装环境、校验完整性，Claude Code 完成全部迁移
-
-> ⚠️ **Discord Bot 注意**：同一个 Bot Token 不能在两台设备同时运行。Agent 会在新设备启动前停止旧设备（约 5 分钟离线）。
+**密钥永远不经过 GitHub。** 打包、传输、安装三个阶段分别校验。
 
 ### 迁移内容
 
@@ -185,11 +195,13 @@ MIT
 
 ### ✨ 特性
 
-- 📦 **一键迁移** — 旧设备打包，新设备部署，搞定
-- 🔒 **安全至上** — 加密传输 + SHA256 校验，密钥不经过 GitHub
-- 🌐 **网络自适应** — 官方源 → Gitee 镜像 → 报错 + 排查指引
-- ⏱️ **智能降级** — npm 超时自动切换 npmmirror
-- ♻️ **随时回滚** — 旧设备数据完整保留，随时可回退
+- 📦 **Agent 全程代劳** — 只需提供 SSH 信息，Agent 远程控制全部流程
+- 🔒 **三重 SHA256 校验** — 打包→传输→安装，每个阶段都验证完整性
+- 📊 **实时进度反馈** — Agent 轮询 `/tmp` 进度文件，在对话中实时显示进度
+- 🌐 **中国网络自适应** — 自动检测并切换 npmmirror、Gitee 镜像
+- 🔄 **rsync 带进度条** — rsync 不可用时自动降级为 scp
+- ♻️ **随时回滚** — 部署后压缩包保留，随时可重新部署或回退旧设备
+- 🛡️ **sudo 安全机制** — SUDO_OK 检测，无免密 sudo 时优雅跳过
 
 ### 设备要求
 
@@ -218,22 +230,24 @@ git clone https://github.com/AICodeLion/agent-pack-n-go.git
 
 | 步骤 | 耗时 | 执行者 |
 |------|------|--------|
-| 迁移前检查 | 2 分钟 | 👤 回答问题 |
+| 迁移前检查（SSH 配置） | 3 分钟 | 👤 ssh-copy-id + 确认 |
 | 打包 + 传输 | 5 分钟 | 🦁 Agent 自动 |
-| `bash setup.sh` | 5 分钟 | 👤 一条命令 |
-| Claude Code 迁移 | 10-15 分钟 | 🤖 自动 |
-| 验证 | 5 分钟 | 👤 |
-| **总计** | **约 30 分钟** | |
+| 安装环境（基础环境） | 5-8 分钟 | 🦁 Agent 远程自动 |
+| 部署（OpenClaw） | 3-5 分钟 | 🦁 Agent 远程自动 |
+| 验证切换 | 5 分钟 | 👤 确认 |
+| **总计** | **约 25 分钟** | |
 
 ### 项目结构
 
 ```
 agent-pack-n-go/
-├── SKILL.md                      # Skill 定义与 Agent 工作流
+├── SKILL.md                      # Skill 定义与 Agent 六阶段工作流
 ├── scripts/
-│   ├── pack.sh                   # 旧设备：打包一切（10 步）
-│   ├── setup.sh                  # 新设备：环境安装（11 步）
-│   ├── generate-instructions.sh  # 生成 Claude Code 迁移指令
+│   ├── pack.sh                   # 旧设备：打包一切（11 步）
+│   ├── transfer.sh               # 旧设备：rsync 传输 + SHA256 验证
+│   ├── setup.sh                  # 新设备：基础环境安装（12 步）
+│   ├── deploy.sh                 # 新设备：OpenClaw 部署（12 步）
+│   ├── generate-instructions.sh  # 生成备用迁移文档
 │   └── welcome.sh                # 安装后欢迎信息
 └── references/
     ├── migration-guide.md        # 完整迁移手册

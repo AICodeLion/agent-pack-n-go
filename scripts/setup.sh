@@ -8,7 +8,17 @@ YELLOW='\033[1;33m'
 NC='\033[0m'
 
 PACK_FILE=~/openclaw-migration-pack.tar.gz
-TOTAL=11
+TOTAL=12
+PROGRESS_FILE="/tmp/openclaw-setup-progress.txt"
+echo "0/${TOTAL} 初始化..." > "$PROGRESS_FILE"
+
+update_progress() { echo "$1" > "$PROGRESS_FILE"; }
+
+# Check if sudo is available without password (non-interactive SSH)
+SUDO_OK=false
+if sudo -n true 2>/dev/null; then
+    SUDO_OK=true
+fi
 
 # ─── Spinner ─────────────────────────────────────────────────────────────────
 # Usage: run_with_spinner "label" cmd [args...]
@@ -56,7 +66,8 @@ echo "  OpenClaw New Device Setup"
 echo "========================================"
 echo ""
 
-# ─── [1/11] Verify migration pack integrity ─────────────────────────────────
+# ─── [1/12] Verify migration pack integrity ─────────────────────────────────
+update_progress "1/${TOTAL} 校验迁移包完整性..."
 echo -n "[1/${TOTAL}] Verifying migration pack integrity (SHA256)..."
 if [ -f ~/openclaw-migration-pack.sha256 ]; then
     cd ~
@@ -69,16 +80,40 @@ else
     echo -e " ${YELLOW}⚠️  Checksum file not found, skipping integrity verification${NC}"
 fi
 
-# ─── [2/11] Install base dependencies ───────────────────────────────────────
-printf "[2/${TOTAL}] Installing base dependencies (git, curl, python3)..."
-if run_with_spinner "Installing base dependencies..." sudo apt-get install -y git curl python3 python3-pip; then
-    ok
+# ─── [2/12] Update system packages ──────────────────────────────────────────
+update_progress "2/${TOTAL} 更新系统包..."
+printf "[2/${TOTAL}] Updating system packages..."
+if [ "$SUDO_OK" = true ]; then
+    if run_with_spinner "Updating system packages..." bash -c 'sudo apt-get update -y && sudo DEBIAN_FRONTEND=noninteractive apt-get upgrade -y'; then
+        ok
+    else
+        echo -e " ${YELLOW}⚠️  System update failed (non-fatal, continuing)${NC}"
+    fi
 else
-    fail "apt-get install failed, please check network or sudo permissions"
+    echo -e " ${YELLOW}⚠️  sudo requires password, skipping (run manually: sudo apt-get update && sudo apt-get upgrade -y)${NC}"
 fi
 
-# ─── [3/11] Detect China network & set npm mirror ───────────────────────────
-echo -n "[3/${TOTAL}] Detecting network environment..."
+# ─── [3/12] Install base dependencies ───────────────────────────────────────
+update_progress "3/${TOTAL} 安装基础依赖..."
+printf "[3/${TOTAL}] Installing base dependencies (git, curl, python3)..."
+if [ "$SUDO_OK" = true ]; then
+    if run_with_spinner "Installing base dependencies..." sudo apt-get install -y git curl python3 python3-pip; then
+        ok
+    else
+        fail "apt-get install failed, please check network or sudo permissions"
+    fi
+else
+    # Check if they're already installed
+    if command -v git > /dev/null 2>&1 && command -v curl > /dev/null 2>&1 && command -v python3 > /dev/null 2>&1; then
+        echo -e " ${GREEN}✅ (already installed)${NC}"
+    else
+        fail "sudo requires password and base dependencies are missing. Run manually: sudo apt-get install -y git curl python3 python3-pip"
+    fi
+fi
+
+# ─── [4/12] Detect China network & set npm mirror ───────────────────────────
+update_progress "4/${TOTAL} 检测网络环境..."
+echo -n "[4/${TOTAL}] Detecting network environment..."
 USE_MIRROR=false
 if ! curl -sf --connect-timeout 5 https://registry.npmjs.org/ > /dev/null 2>&1; then
     USE_MIRROR=true
@@ -87,8 +122,9 @@ else
     ok
 fi
 
-# ─── [4/11] Install / verify nvm ────────────────────────────────────────────
-echo -n "[4/${TOTAL}] Checking nvm..."
+# ─── [5/12] Install / verify nvm ────────────────────────────────────────────
+update_progress "5/${TOTAL} 检查 nvm..."
+echo -n "[5/${TOTAL}] Checking nvm..."
 export NVM_DIR="$HOME/.nvm"
 if [ -s "$NVM_DIR/nvm.sh" ]; then
     # shellcheck source=/dev/null
@@ -101,17 +137,18 @@ else
     _nvm_install_official() { curl -fsSL --connect-timeout 15 "https://raw.githubusercontent.com/nvm-sh/nvm/${NVM_VERSION}/install.sh" | bash; }
     _nvm_install_gitee()    { curl -fsSL --connect-timeout 15 "https://gitee.com/mirrors/nvm/raw/${NVM_VERSION}/install.sh" | bash; }
     if run_with_spinner "Installing nvm (official)..." _nvm_install_official 2>/dev/null; then
-        echo -e "[4/${TOTAL}] nvm installed (official source) ${GREEN}✅${NC}"
+        echo -e "[5/${TOTAL}] nvm installed (official source) ${GREEN}✅${NC}"
     elif run_with_spinner "Installing nvm (Gitee mirror)..." _nvm_install_gitee 2>/dev/null; then
-        echo -e "[4/${TOTAL}] nvm installed (Gitee mirror) ${GREEN}✅${NC}"
+        echo -e "[5/${TOTAL}] nvm installed (Gitee mirror) ${GREEN}✅${NC}"
     else
         fail "nvm installation failed, please check network connectivity. You may need to configure a proxy or install nvm manually: https://github.com/nvm-sh/nvm#installing-and-updating"
     fi
     source "$NVM_DIR/nvm.sh"
 fi
 
-# ─── [5/11] Install Node.js 22 ───────────────────────────────────────────────
-printf "[5/${TOTAL}] Installing Node.js 22..."
+# ─── [6/12] Install Node.js 22 ───────────────────────────────────────────────
+update_progress "6/${TOTAL} 安装 Node.js 22..."
+printf "[6/${TOTAL}] Installing Node.js 22..."
 if node --version 2>/dev/null | grep -q '^v22'; then
     echo -e " ${GREEN}✅ Already v22 ($(node --version))${NC}"
 else
@@ -132,8 +169,9 @@ else
     nvm use 22
 fi
 
-# ─── [6/11] Configure npm global path ───────────────────────────────────────
-echo -n "[6/${TOTAL}] Configuring npm global path (~/.npm-global)..."
+# ─── [7/12] Configure npm global path ───────────────────────────────────────
+update_progress "7/${TOTAL} 配置 npm 全局路径..."
+echo -n "[7/${TOTAL}] Configuring npm global path (~/.npm-global)..."
 mkdir -p ~/.npm-global
 npm config set prefix ~/.npm-global
 
@@ -152,8 +190,9 @@ else
     ok
 fi
 
-# ─── [7/11] Install Claude Code ──────────────────────────────────────────────
-printf "[7/${TOTAL}] Installing Claude Code..."
+# ─── [8/12] Install Claude Code ──────────────────────────────────────────────
+update_progress "8/${TOTAL} 安装 Claude Code..."
+printf "[8/${TOTAL}] Installing Claude Code..."
 if command -v claude > /dev/null 2>&1; then
     echo -e " ${GREEN}✅ Already installed ($(claude --version 2>/dev/null || echo 'unknown'))${NC}"
 else
@@ -163,18 +202,20 @@ else
         echo -e " ${YELLOW}⚠️  Install timeout, trying npmmirror...${NC}"
         npm config set registry https://registry.npmmirror.com
         if run_with_spinner "Installing Claude Code (npmmirror)..." timeout 120 npm install -g @anthropic-ai/claude-code; then
-            echo -e "[7/${TOTAL}] Claude Code installed (npmmirror) ${GREEN}✅${NC}"
+            echo -e "[8/${TOTAL}] Claude Code installed (npmmirror) ${GREEN}✅${NC}"
         else
             fail "Claude Code installation failed, please check network"
         fi
     fi
 fi
 
-# ─── [8/11] Restore ~/.claude/ from migration pack ──────────────────────────
-echo -n "[8/${TOTAL}] Restoring Claude Code config from migration pack..."
+# ─── [9/12] Restore ~/.claude/ from migration pack ──────────────────────────
+update_progress "9/${TOTAL} 恢复 Claude Code 配置..."
+echo -n "[9/${TOTAL}] Restoring Claude Code config from migration pack..."
 if [ -f "$PACK_FILE" ]; then
     mkdir -p ~/.claude
-    tar xzf "$PACK_FILE" -C /tmp/setup-extract-$$ --wildcards 'claude-config/*' 2>/dev/null || true
+    mkdir -p /tmp/setup-extract-$$
+    tar xzf "$PACK_FILE" -C /tmp/setup-extract-$$ --wildcards 'claude-config/*' 'manifest.sha256' 2>/dev/null || true
     if [ -d "/tmp/setup-extract-$$/claude-config" ]; then
         # Verify critical file integrity
         if [ -f "/tmp/setup-extract-$$/manifest.sha256" ]; then
@@ -199,10 +240,12 @@ else
     echo -e " ${YELLOW}⚠️  $PACK_FILE not found, skipping${NC}"
 fi
 
-# ─── [9/11] Restore ~/.ssh/ from migration pack ─────────────────────────────
-echo -n "[9/${TOTAL}] Restoring SSH keys from migration pack..."
+# ─── [10/12] Restore ~/.ssh/ from migration pack ────────────────────────────
+update_progress "10/${TOTAL} 恢复 SSH 密钥..."
+echo -n "[10/${TOTAL}] Restoring SSH keys from migration pack..."
 if [ -f "$PACK_FILE" ]; then
     mkdir -p ~/.ssh
+    mkdir -p /tmp/setup-extract-$$
     tar xzf "$PACK_FILE" -C /tmp/setup-extract-$$ --wildcards 'ssh-keys/*' 2>/dev/null || true
     if [ -d "/tmp/setup-extract-$$/ssh-keys" ]; then
         cp -r /tmp/setup-extract-$$/ssh-keys/. ~/.ssh/
@@ -224,16 +267,26 @@ else
     echo -e " ${YELLOW}⚠️  $PACK_FILE not found, skipping${NC}"
 fi
 
-# ─── [10/11] Install basic tools ─────────────────────────────────────────────
-printf "[10/${TOTAL}] Installing auxiliary tools (proxychains4)..."
-if run_with_spinner "Installing proxychains4..." sudo apt-get install -y proxychains4; then
-    ok
+# ─── [11/12] Install basic tools ─────────────────────────────────────────────
+update_progress "11/${TOTAL} 安装辅助工具..."
+printf "[11/${TOTAL}] Installing auxiliary tools (proxychains4)..."
+if [ "$SUDO_OK" = true ]; then
+    if run_with_spinner "Installing proxychains4..." sudo apt-get install -y proxychains4; then
+        ok
+    else
+        echo -e " ${YELLOW}⚠️  proxychains4 installation failed (optional, can be installed manually later)${NC}"
+    fi
 else
-    echo -e " ${YELLOW}⚠️  proxychains4 installation failed (optional, can be installed manually later)${NC}"
+    if command -v proxychains4 > /dev/null 2>&1; then
+        echo -e " ${GREEN}✅ (already installed)${NC}"
+    else
+        echo -e " ${YELLOW}⚠️  sudo requires password, skipping (run manually: sudo apt-get install -y proxychains4)${NC}"
+    fi
 fi
 
-# ─── [11/11] Verify Claude Code ─────────────────────────────────────────────
-echo -n "[11/${TOTAL}] Verifying Claude Code is functional..."
+# ─── [12/12] Verify Claude Code ─────────────────────────────────────────────
+update_progress "12/${TOTAL} 验证 Claude Code..."
+echo -n "[12/${TOTAL}] Verifying Claude Code is functional..."
 if claude --version > /dev/null 2>&1; then
     ok
 else
@@ -255,7 +308,7 @@ echo -e "  📋 已恢复："
 [ -f ~/.claude/settings.json ] && echo -e "    ${GREEN}✓${NC} Claude Code 配置"
 [ -d ~/.ssh ] && echo -e "    ${GREEN}✓${NC} SSH 密钥 ($(find ~/.ssh -maxdepth 1 -name 'id_*' ! -name '*.pub' 2>/dev/null | wc -l) 个)"
 echo ""
-echo "Next, run the following command to let Claude Code complete the migration:"
+echo -e "  Next: run ${YELLOW}bash ~/deploy.sh${NC} to deploy OpenClaw on this device."
+echo -e "  (Or let your agent run it remotely via SSH)"
 echo ""
-echo -e "  ${YELLOW}claude --dangerously-skip-permissions \"Follow ~/migration-instructions.md to complete the OpenClaw migration\"${NC}"
-echo ""
+update_progress "DONE ✅ 基础环境就绪"
