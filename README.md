@@ -67,7 +67,6 @@ All sensitive data transferred via rsync over SSH with triple SHA256 integrity v
 | **Full clone (13 items)** | ✅ | ❓ | Partial sync | Manual |
 | **Network diagnostics** | ✅ | ❌ | ❌ | ❌ |
 | **China server tested** | ✅ Proxy support | ❓ | ❓ | ❌ |
-| **Battle-tested** | ✅ 4 live tests | ❓ | ❓ | N/A |
 
 **Your data never passes through any third-party cloud.** Direct device-to-device transfer over SSH — the way it should be.
 
@@ -212,7 +211,6 @@ MIT
 | **全量克隆 (13类)** | ✅ | ❓ | 部分同步 | 手动 |
 | **网络诊断** | ✅ | ❌ | ❌ | ❌ |
 | **中国服务器实测** | ✅ 代理支持 | ❓ | ❓ | ❌ |
-| **实机验证** | ✅ 4 次实测 | ❓ | ❓ | N/A |
 
 **你的数据不经过任何第三方云服务。** 设备到设备，SSH 直连传输——安全本该如此。
 
