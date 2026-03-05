@@ -157,26 +157,46 @@ Transfers all files (pack + scripts) to new device home directory. Verifies SHA2
 
 #### 3.1 Install base environment + Claude Code
 
-```bash
-ssh USER@HOST 'bash ~/setup.sh'
+> ⚠️ **IMPORTANT**: setup.sh takes ~5 minutes and deploy.sh takes ~8 minutes.
+> Use **background execution** to avoid LLM request timeouts.
+> Never use synchronous exec with long timeouts for these commands.
+
+**Correct pattern** (background + notification):
+```
+exec: ssh USER@HOST 'bash ~/setup.sh'
+  background: true
+  yieldMs: 5000
+```
+
+This returns a session ID in ~5 seconds. The agent should:
+1. Tell the user: "正在安装基础环境，预计 5 分钟…"
+2. **Wait for the exec completion notification** (OpenClaw auto-pushes `[System Message] Exec completed`)
+3. Read the session log to check results
+
+**Wrong pattern** (will cause "LLM request timed out" ❌):
+```
+exec: ssh USER@HOST 'bash ~/setup.sh'
+  timeout: 600
+  yieldMs: 10000
+→ process.poll(timeout=300000)  ← blocks too long, LLM times out
 ```
 
 `setup.sh` installs: nvm, Node.js 22, npm globals, Claude Code. Has spinner + progress output.
-
-Poll remote progress during execution:
-```bash
-ssh USER@HOST 'cat /tmp/openclaw-setup-progress.txt 2>/dev/null'
-```
 
 Check exit code — if non-zero, report failure to user and stop.
 
 #### 3.2 Deploy OpenClaw
 
-```bash
-ssh USER@HOST 'bash ~/deploy.sh'
+Same background pattern as 3.1:
+```
+exec: ssh USER@HOST 'DEPLOY_MODE=direct bash ~/deploy.sh'
+  background: true
+  yieldMs: 5000
 ```
 
-`deploy.sh` handles all 12 deployment steps:
+Wait for completion notification, then read log.
+
+`deploy.sh` handles all 13 deployment steps:
 1. Extract migration pack
 2. npm install openclaw + mcporter
 3. Restore ~/.openclaw/ config
@@ -189,11 +209,7 @@ ssh USER@HOST 'bash ~/deploy.sh'
 10. Restore Dashboard (optional)
 11. Check logs for connectivity
 12. Cleanup temp files
-
-Poll remote progress during execution:
-```bash
-ssh USER@HOST 'cat /tmp/openclaw-deploy-progress.txt 2>/dev/null'
-```
+13. Direct-mode config cleanup (if DEPLOY_MODE=direct)
 
 Check exit code and FAILED_STEPS in output — report any issues to user.
 
