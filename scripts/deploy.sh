@@ -146,7 +146,7 @@ if [ "$OLD_USER" != "$NEW_USER" ]; then
             sed -i "s|/home/${OLD_USER}|/home/${NEW_USER}|g" "$target_file" || true
             echo -e "       ${GREEN}✓${NC} ${target_file} paths fixed"
         fi
-    done < <(find ~/.openclaw ~/.claude -name '*.json' -type f 2>/dev/null)
+    done < <(find ~/.openclaw ~/.claude -type f \( -name '*.json' -o -name '*.md' -o -name '*.sh' -o -name '*.service' -o -name '*.txt' -o -name '*.conf' -o -name '*.toml' -o -name '*.yaml' -o -name '*.yml' -o -name '*.html' -o -name '*.py' \) 2>/dev/null)
     # Also fix crontab backup
     if [ -f "$MIGRATION_TMP/crontab-backup.txt" ] && grep -q "/home/${OLD_USER}" "$MIGRATION_TMP/crontab-backup.txt" 2>/dev/null; then
         sed -i "s|/home/${OLD_USER}|/home/${NEW_USER}|g" "$MIGRATION_TMP/crontab-backup.txt" || true
