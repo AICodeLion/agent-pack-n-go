@@ -59,14 +59,31 @@ All sensitive data transferred via rsync over SSH with triple SHA256 integrity v
 
 ## 🏆 Why agent-pack-n-go?
 
-Most tools back up your agent's *data*. We clone the **entire agent** — it wakes up on the new machine and just works.
+Most tools **back up** your agent's data. We **clone** the entire agent — it wakes up on the new machine and just works.
 
-| | agent-pack-n-go | Alternatives |
-|---|---|---|
-| 🔐 **Zero trust** | Pure SSH point-to-point. Your secrets never touch any cloud. | Cloud relay (TiDB Zero), or manual copy |
-| 🧬 **True clone, not backup** | Data + runtime (nvm/Node/Claude) + system config (/etc/hosts, crontab, proxy) — agent boots and works immediately | Data only — you still need to set up the environment manually |
-| 🤖 **Agent-driven** | Say "clone me", agent handles everything via SSH. No manual steps. | Follow a migration guide, or configure a cloud sync service |
-| 🛡️ **Works anywhere** | No sudo? Skips gracefully. No rsync? Falls back to scp. Needs proxy? Auto-detected. Always completes. | Assumes ideal environment |
+> **Backup** = save files → manually install Node/nvm/Claude → manually configure → hope it works
+>
+> **Clone** = data + runtime + credentials + system config → agent boots and works immediately
+
+### Feature Comparison
+
+| Feature | agent-pack-n-go | agent-life | OpenClaw Backup | GitClaw | Official Docs |
+|---|---|---|---|---|---|
+| **What it does** | Full device clone | Cross-framework migration | Backup & restore | Auto-backup to GitHub | Manual guide |
+| **One command** | ✅ "帮我克隆" | ✅ | CLI script | ✅ Cron | ❌ Manual |
+| **Runtime setup** (nvm/Node/Claude) | ✅ Auto-installed | ❌ | ❌ | ❌ | ❌ |
+| **Credentials** (API keys, tokens) | ✅ SSH encrypted | ✅ Zero-knowledge | ❌ Excluded | ❌ | ✅ Manual copy |
+| **System config** (/etc/hosts, crontab, proxy) | ✅ | ❌ | ❌ | ❌ | ❌ |
+| **Gateway auto-start** | ✅ systemd + fallback | ❌ | ❌ | ❌ | ❌ |
+| **Network diagnostics** | ✅ Direct/proxy auto-detect | ❌ | ❌ | ❌ | ❌ |
+| **Zero third-party** | ✅ Pure SSH | ❌ Cloud sync | ❌ GitHub | ❌ GitHub | ✅ |
+| **Graceful degradation** | ✅ No sudo/rsync? Still works | ❓ | ❌ | ❌ | ❌ |
+| **Cross-framework** | ❌ OpenClaw only | ✅ Any → Any | ❌ | ❌ | ❌ |
+| **Integrity check** | ✅ Triple SHA256 | ✅ | ❌ | ❌ (git hash) | ❌ |
+
+### The key difference
+
+Other tools save your agent's *files*. agent-pack-n-go delivers a **working agent on a new machine** — runtime environment, system configuration, credentials, and auto-started gateway included. No manual steps after the clone.
 
 **Your data never passes through any third-party cloud.** Direct device-to-device transfer over SSH — the way it should be.
 
@@ -203,14 +220,31 @@ MIT
 
 ### 🏆 为什么选 agent-pack-n-go？
 
-大多数工具只备份 Agent 的*数据*。我们克隆的是**整个 Agent**——在新设备上直接活过来，开机即用。
+大多数工具**备份** Agent 的数据。我们**克隆**整个 Agent——在新设备上直接活过来，开机即用。
 
-| | agent-pack-n-go | 其他方案 |
-|---|---|---|
-| 🔐 **零信任** | 纯 SSH 点对点传输，密钥不经过任何云服务 | 云端中转（TiDB Zero），或手动复制 |
-| 🧬 **真正的克隆，不只是备份** | 数据 + 运行时环境（nvm/Node/Claude）+ 系统配置（/etc/hosts、crontab、代理）— Agent 到了就能跑 | 只备份数据——环境还得自己搭 |
-| 🤖 **Agent 全程代劳** | 说句"帮我克隆"，Agent 通过 SSH 搞定一切，无需手动操作 | 照着迁移文档操作，或配置云同步服务 |
-| 🛡️ **到哪都能跑** | 没 sudo？优雅跳过。没 rsync？降级为 scp。需要代理？自动检测。永远能跑完。 | 假设理想环境 |
+> **备份** = 存文件 → 手动装 Node/nvm/Claude → 手动配环境 → 祈祷能跑
+>
+> **克隆** = 数据 + 运行时 + 凭证 + 系统配置 → Agent 到了就能跑
+
+### 功能对比
+
+| 功能 | agent-pack-n-go | agent-life | OpenClaw Backup | GitClaw | 官方文档 |
+|---|---|---|---|---|---|
+| **定位** | 完整设备克隆 | 跨框架迁移 | 备份与恢复 | 自动备份到 GitHub | 手动指南 |
+| **一句话触发** | ✅ "帮我克隆" | ✅ | CLI 脚本 | ✅ Cron | ❌ 手动 |
+| **运行时安装** (nvm/Node/Claude) | ✅ 自动安装 | ❌ | ❌ | ❌ | ❌ |
+| **凭证** (API key, token) | ✅ SSH 加密传输 | ✅ 零知识加密 | ❌ 明确排除 | ❌ | ✅ 手动复制 |
+| **系统配置** (/etc/hosts, crontab, 代理) | ✅ | ❌ | ❌ | ❌ | ❌ |
+| **Gateway 自启** | ✅ systemd + 兜底 | ❌ | ❌ | ❌ | ❌ |
+| **网络诊断** | ✅ 直连/代理自动检测 | ❌ | ❌ | ❌ | ❌ |
+| **零第三方** | ✅ 纯 SSH | ❌ 云同步 | ❌ GitHub | ❌ GitHub | ✅ |
+| **优雅降级** | ✅ 无 sudo/rsync 也能跑 | ❓ | ❌ | ❌ | ❌ |
+| **跨框架** | ❌ 仅 OpenClaw | ✅ 任意 → 任意 | ❌ | ❌ | ❌ |
+| **完整性校验** | ✅ 三重 SHA256 | ✅ | ❌ | ❌ (git hash) | ❌ |
+
+### 核心区别
+
+其他工具保存 Agent 的*文件*。agent-pack-n-go 交付的是**新设备上一个能用的 Agent**——运行时环境、系统配置、凭证、Gateway 自启动，全部就绪。克隆完零手动操作。
 
 **你的数据不经过任何第三方云服务。** 设备到设备，SSH 直连传输——安全本该如此。
 
