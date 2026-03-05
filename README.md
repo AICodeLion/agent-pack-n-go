@@ -24,16 +24,18 @@ Old Device (Agent controls everything)    New Device (SSH remote)
 │ 3. transfer.sh USER@HOST ────────┼─────→│ files arrive            │
 │ 4. ssh USER@HOST "bash setup.sh" │─────→│ (base env + Claude)     │
 │ 5. ssh USER@HOST "bash deploy.sh"│─────→│ (openclaw deployed)     │
-│ 6. Verify clone is working        │      │ ✅ New device running   │
+│ 6. Verify + celebrate!            │      │ ✅ New device running   │
 └──────────────────────────────────┘      └─────────────────────────┘
 ```
 
 1. 🔍 **Pre-flight** — Agent asks for SSH info, you run `ssh-copy-id` once (one password input), agent verifies connectivity
-2. 📦 **Package** — `pack.sh` (11 steps) bundles everything with SHA256 checksums
-3. 📡 **Transfer** — `transfer.sh` uses rsync with progress (scp fallback), remote SHA256 verification
-4. 🔧 **Setup** — Agent SSH runs `setup.sh` (12 steps): apt update, nvm, node 22, Claude Code, restore configs
-5. 🚀 **Deploy** — Agent SSH runs `deploy.sh` (12 steps): extract, install OpenClaw, restore configs/hosts/crontab, start gateway
-6. ✅ **Verify** — Check connectivity, you confirm; optionally stop old device
+2. 🌐 **Network check** — Auto-detect if new device needs proxy or can connect directly
+3. 📦 **Package** — `pack.sh` (11 steps) bundles everything with SHA256 checksums
+4. 📡 **Transfer** — `transfer.sh` uses rsync with progress (scp fallback), remote SHA256 verification
+5. 🔧 **Setup** — Agent SSH runs `setup.sh` (12 steps): apt update, nvm, node 22, Claude Code, restore configs
+6. 🚀 **Deploy** — Agent SSH runs `deploy.sh` (13 steps): extract, install OpenClaw, restore configs/hosts/crontab, start gateway, direct-mode cleanup
+7. 🔄 **Switch & Verify** — Agent guides you through device switch, three-step verification (messaging, memory, tools)
+8. 🎉 **Celebrate!** — Clone summary + cleanup tips
 
 > ℹ️ **Discord Bot note**: If using the same Bot Token, it can't run on two devices simultaneously. Plan a brief switchover (~5 min downtime). If using different tokens, both devices can run in parallel.
 
@@ -70,8 +72,9 @@ All sensitive data transferred via rsync over SSH with triple SHA256 integrity v
 
 - 📦 **Agent handles everything** — Just provide SSH info; agent controls the full flow remotely
 - 🔒 **Triple SHA256 verification** — pack → transfer → setup, integrity checked at every stage
+- 🌐 **Network auto-detection** — Checks if new device can reach Discord/Anthropic directly or needs proxy
 - 📊 **Real-time progress** — Agent polls `/tmp` progress files and shows live updates in chat
-- 🌐 **China network auto-detection** — npmmirror, Gitee mirror, auto-selected based on region
+- 🌏 **China network auto-detection** — npmmirror, Gitee mirror, auto-selected based on region
 - 🔄 **rsync with progress** — scp fallback if rsync unavailable
 - ♻️ **Rollback ready** — tarball preserved after deploy, restart old device anytime
 - 🛡️ **sudo safety** — SUDO_OK detection, graceful skip when no passwordless sudo
@@ -107,19 +110,20 @@ Once installed, just say: **"帮我克隆到新设备"** or **"clone to a new de
 | Pack + transfer | 5 min | 🦁 Agent (auto) |
 | Setup (base env) | 5-8 min | 🦁 Agent via SSH (auto) |
 | Deploy (OpenClaw) | 3-5 min | 🦁 Agent via SSH (auto) |
-| Verify & switch | 5 min | 👤 Confirm |
+| Switch & verify | 3 min | 👤 Guided by Agent |
 | **Total** | **~25 min** | |
 
 ## Project Structure
 
 ```
 agent-pack-n-go/
-├── SKILL.md                      # Skill definition & 6-phase agent workflow
+├── SKILL.md                      # Skill definition & agent workflow
 ├── scripts/
 │   ├── pack.sh                   # Old device: package everything (11 steps)
 │   ├── transfer.sh               # Old device: rsync to new device + SHA256 verify
 │   ├── setup.sh                  # New device: base environment (12 steps)
-│   ├── deploy.sh                 # New device: OpenClaw deployment (12 steps)
+│   ├── deploy.sh                 # New device: OpenClaw deployment (13 steps)
+│   ├── network-check.sh          # New device: test direct connectivity
 │   ├── generate-instructions.sh  # Generate fallback clone doc
 │   └── welcome.sh                # Post-install welcome message
 └── references/
@@ -151,16 +155,18 @@ MIT
 │ 3. transfer.sh USER@HOST ────────┼─────→│ 文件到达                │
 │ 4. ssh USER@HOST "bash setup.sh" │─────→│（基础环境 + Claude）    │
 │ 5. ssh USER@HOST "bash deploy.sh"│─────→│（OpenClaw 部署完毕）    │
-│ 6. 验证克隆成功                  │      │ ✅ 新设备运行中         │
+│ 6. 验证 + 庆祝！                 │      │ ✅ 新设备运行中         │
 └──────────────────────────────────┘      └─────────────────────────┘
 ```
 
 1. 🔍 **克隆前检查** — Agent 询问 SSH 信息，你跑一次 `ssh-copy-id`（只需输一次密码），Agent 验证连通性
-2. 📦 **打包** — `pack.sh`（11 步）打包所有内容，生成 SHA256 校验值
-3. 📡 **传输** — `transfer.sh` 使用 rsync 带进度条传输（scp 兜底），远端 SHA256 验证
-4. 🔧 **安装环境** — Agent SSH 运行 `setup.sh`（12 步）：apt update、nvm、node 22、Claude Code、恢复配置
-5. 🚀 **部署** — Agent SSH 运行 `deploy.sh`（12 步）：解压、安装 OpenClaw、恢复配置/hosts/定时任务、启动网关
-6. ✅ **验证克隆** — 检查连通性，你确认；可选停止旧设备
+2. 🌐 **网络诊断** — 自动检测新设备能否直连 Discord/Anthropic，还是需要代理
+3. 📦 **打包** — `pack.sh`（11 步）打包所有内容，生成 SHA256 校验值
+4. 📡 **传输** — `transfer.sh` 使用 rsync 带进度条传输（scp 兜底），远端 SHA256 验证
+5. 🔧 **安装环境** — Agent SSH 运行 `setup.sh`（12 步）：apt update、nvm、node 22、Claude Code、恢复配置
+6. 🚀 **部署** — Agent SSH 运行 `deploy.sh`（13 步）：解压、安装 OpenClaw、恢复配置/hosts/定时任务、启动网关、直连模式清理
+7. 🔄 **切换与验证** — Agent 引导你切换设备，三步验证（消息/记忆/工具）
+8. 🎉 **庆祝！** — 克隆总结 + 清理提醒
 
 > ℹ️ **Discord Bot 注意**：同一个 Bot Token 不能在两台设备同时运行。如需完全切换，停止旧设备约需 5 分钟。如使用不同 Token，两台设备可同时运行。
 
@@ -197,8 +203,9 @@ MIT
 
 - 📦 **Agent 全程代劳** — 只需提供 SSH 信息，Agent 远程控制全部流程
 - 🔒 **三重 SHA256 校验** — 打包→传输→安装，每个阶段都验证完整性
+- 🌐 **网络自动检测** — 检测新设备能否直连 Discord/Anthropic，自动选择直连或代理模式
 - 📊 **实时进度反馈** — Agent 轮询 `/tmp` 进度文件，在对话中实时显示进度
-- 🌐 **中国网络自适应** — 自动检测并切换 npmmirror、Gitee 镜像
+- 🌏 **中国网络自适应** — 自动检测并切换 npmmirror、Gitee 镜像
 - 🔄 **rsync 带进度条** — rsync 不可用时自动降级为 scp
 - ♻️ **随时回滚** — 部署后压缩包保留，随时可重新部署或回退旧设备
 - 🛡️ **sudo 安全机制** — SUDO_OK 检测，无免密 sudo 时优雅跳过
@@ -234,19 +241,20 @@ git clone https://github.com/AICodeLion/agent-pack-n-go.git
 | 打包 + 传输 | 5 分钟 | 🦁 Agent 自动 |
 | 安装环境（基础环境） | 5-8 分钟 | 🦁 Agent 远程自动 |
 | 部署（OpenClaw） | 3-5 分钟 | 🦁 Agent 远程自动 |
-| 验证克隆 | 5 分钟 | 👤 确认 |
+| 切换与验证 | 3 分钟 | 👤 Agent 引导 |
 | **总计** | **约 25 分钟** | |
 
 ### 项目结构
 
 ```
 agent-pack-n-go/
-├── SKILL.md                      # Skill 定义与 Agent 六阶段工作流
+├── SKILL.md                      # Skill 定义与 Agent 工作流
 ├── scripts/
 │   ├── pack.sh                   # 旧设备：打包一切（11 步）
 │   ├── transfer.sh               # 旧设备：rsync 传输 + SHA256 验证
 │   ├── setup.sh                  # 新设备：基础环境安装（12 步）
-│   ├── deploy.sh                 # 新设备：OpenClaw 部署（12 步）
+│   ├── deploy.sh                 # 新设备：OpenClaw 部署（13 步）
+│   ├── network-check.sh          # 新设备：网络直连检测
 │   ├── generate-instructions.sh  # 生成备用克隆文档
 │   └── welcome.sh                # 安装后欢迎信息
 └── references/
