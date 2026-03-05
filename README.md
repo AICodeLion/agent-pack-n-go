@@ -57,6 +57,20 @@ All sensitive data transferred via rsync over SSH with triple SHA256 integrity v
 
 **Your secrets never touch GitHub.** Checksums verify the full pack at pack time, transfer time, and setup time.
 
+## 🏆 Why agent-pack-n-go?
+
+| | agent-pack-n-go | agent-teleport | claw-roam | Official docs |
+|---|---|---|---|---|
+| **One command** | ✅ "帮我克隆" | ✅ | ✅ | ❌ Manual |
+| **Zero 3rd-party** | ✅ Pure SSH+rsync | ❌ Needs TiDB Zero | ❓ | ✅ |
+| **Data stays private** | ✅ Point-to-point | ❌ Cloud relay | ❓ | ✅ |
+| **Full clone (13 items)** | ✅ | ❓ | Partial sync | Manual |
+| **Network diagnostics** | ✅ | ❌ | ❌ | ❌ |
+| **China server tested** | ✅ Proxy support | ❓ | ❓ | ❌ |
+| **Battle-tested** | ✅ 4 live tests | ❓ | ❓ | N/A |
+
+**Your data never passes through any third-party cloud.** Direct device-to-device transfer over SSH — the way it should be.
+
 ## What Gets Cloned
 
 | Item | Description |
@@ -187,6 +201,20 @@ MIT
 - Agent 记忆与工作区数据
 
 **密钥永远不经过 GitHub。** 打包、传输、安装三个阶段分别校验。
+
+### 🏆 为什么选 agent-pack-n-go？
+
+| | agent-pack-n-go | agent-teleport | claw-roam | 官方文档 |
+|---|---|---|---|---|
+| **一句话触发** | ✅ "帮我克隆" | ✅ | ✅ | ❌ 手动 |
+| **零第三方依赖** | ✅ 纯 SSH+rsync | ❌ 需 TiDB Zero | ❓ | ✅ |
+| **数据完全私密** | ✅ 点对点传输 | ❌ 云端中转 | ❓ | ✅ |
+| **全量克隆 (13类)** | ✅ | ❓ | 部分同步 | 手动 |
+| **网络诊断** | ✅ | ❌ | ❌ | ❌ |
+| **中国服务器实测** | ✅ 代理支持 | ❓ | ❓ | ❌ |
+| **实机验证** | ✅ 4 次实测 | ❓ | ❓ | N/A |
+
+**你的数据不经过任何第三方云服务。** 设备到设备，SSH 直连传输——安全本该如此。
 
 ### 克隆内容
 
