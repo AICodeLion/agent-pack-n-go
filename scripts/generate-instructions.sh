@@ -19,9 +19,9 @@ fi
 OUTPUT=~/migration-instructions.md
 
 cat > "$OUTPUT" << HEREDOC
-# OpenClaw Migration Instructions
+# OpenClaw Clone Instructions
 
-> Automated migration instructions for Claude Code. Please follow all steps in order and report status after each step.
+> Automated clone instructions for Claude Code. Please follow all steps in order and report status after each step.
 > Old device username: \`${OLD_USER}\`
 
 ---

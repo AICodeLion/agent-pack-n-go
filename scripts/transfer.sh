@@ -46,7 +46,7 @@ done
 
 echo ""
 echo "========================================"
-echo "  OpenClaw Migration Transfer"
+echo "  Agent Clone Transfer"
 echo "========================================"
 echo ""
 

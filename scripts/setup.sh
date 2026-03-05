@@ -79,19 +79,19 @@ fail() { echo -e " ${RED}❌${NC}"; FAILED_STEPS+=("$1"); }
 
 echo ""
 echo "========================================"
-echo "  OpenClaw New Device Setup"
+echo "  Clone Target Setup"
 echo "========================================"
 echo ""
 
 # ─── [1/12] Verify migration pack integrity ─────────────────────────────────
-update_progress "1/${TOTAL} 校验迁移包完整性..."
-echo -n "[1/${TOTAL}] Verifying migration pack integrity (SHA256)..."
+update_progress "1/${TOTAL} 校验克隆包完整性..."
+echo -n "[1/${TOTAL}] Verifying clone pack integrity (SHA256)..."
 if [ -f ~/openclaw-migration-pack.sha256 ]; then
     cd ~
     if sha256sum -c openclaw-migration-pack.sha256 --status 2>/dev/null; then
         echo -e " ${GREEN}✅ Pack checksum verified${NC}"
     else
-        fail "Migration pack checksum failed! File may have been corrupted during transfer. Please re-run scp from the old device."
+        fail "Clone pack checksum failed! File may have been corrupted during transfer. Please re-run scp from the old device."
     fi
 else
     echo -e " ${YELLOW}⚠️  Checksum file not found, skipping integrity verification${NC}"

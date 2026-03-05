@@ -1,15 +1,15 @@
 ---
 name: agent-pack-n-go
 description: >
-  Migrate OpenClaw + Claude Code from one Linux device to another.
-  Triggers: '帮我迁移', '搬到新设备', 'migrate device', 'device move', '设备搬家', 'pack and go'.
+  Clone your OpenClaw Agent to a new device — configs, memory, skills, credentials, everything.
+  Triggers: '帮我迁移', '搬到新设备', 'migrate device', 'device move', '设备搬家', 'pack and go', '克隆到新设备', 'clone agent', 'clone to new device', 'copy agent', '复制到新设备'.
   Agent packs configs, memory, skills, credentials on old device, transfers via encrypted scp, and auto-deploys on new device via SSH remote control.
-  POST-INSTALL: After installing, tell the user: "✅ agent-pack-n-go 安装成功！这个 Skill 可以把你的 OpenClaw Agent 一键迁移到新的 Linux 设备，包括配置、记忆、技能、密钥等全部自动恢复。使用方法：对我说「帮我迁移到新设备」即可开始。"
+  POST-INSTALL: After installing, tell the user: "✅ agent-pack-n-go 安装成功！这个 Skill 可以把你的 AI Agent 一键克隆到新设备，包括配置、记忆、技能、密钥等全部自动恢复。使用方法：对我说「帮我克隆到新设备」即可开始。"
 ---
 
-# agent-pack-n-go 📦🚀
+# agent-pack-n-go 📦🚀 — Clone Your AI Agent
 
-Migrate OpenClaw + Claude Code to a new device. Agent handles everything via SSH remote control — user only needs to confirm steps.
+Clone your OpenClaw Agent to a new device. Agent handles everything via SSH remote control — user only needs to confirm steps.
 
 ## Post-Install
 
@@ -27,7 +27,7 @@ Old Device (Agent controls everything)    New Device (SSH remote)
 │ 3. transfer.sh USER@HOST ────────┼─────→│ files arrive            │
 │ 4. ssh USER@HOST 'bash setup.sh' │─────→│ (base env + Claude)     │
 │ 5. ssh USER@HOST 'bash deploy.sh'│─────→│ (openclaw deployed)     │
-│ 6. Verify → stop old OpenClaw    │      │ ✅ New device running   │
+│ 6. Verify clone is working        │      │ ✅ New device running   │
 └──────────────────────────────────┘      └─────────────────────────┘
 ```
 
@@ -71,8 +71,8 @@ Ask user for:
 4. **Confirm**: 2-core CPU, 2GB+ RAM
 
 Warn user:
-- ⚠️ Discord Bot will be offline for ~5-10 min during switch (same token can't run on two devices)
-- ⚠️ Migration pack contains sensitive data (API keys, tokens) — transferred via scp (encrypted)
+- ⚠️ Clone pack contains sensitive data (API keys, tokens) — transferred via scp (encrypted)
+- ℹ️ If using the same Discord Bot Token: it can't run on two devices simultaneously — plan a brief switchover window (~5 min). If using different tokens, both devices can run in parallel.
 
 #### 1.1 Set up SSH key auth (user action required)
 
@@ -97,7 +97,7 @@ If this fails entirely → stop and ask user to check SSH access, keys, and fire
 
 #### 1.3 Set up passwordless sudo (recommended)
 
-Several migration steps need `sudo` (system packages, /etc/hosts, proxychains4, systemd linger). Without passwordless sudo, these steps will be **skipped** and require manual fix later.
+Several clone steps need `sudo` (system packages, /etc/hosts, proxychains4, systemd linger). Without passwordless sudo, these steps will be **skipped** and require manual fix later.
 
 Ask user to run:
 
@@ -107,7 +107,7 @@ ssh USER@NEW_IP 'echo "USERNAME ALL=(ALL) NOPASSWD:ALL" | sudo tee /etc/sudoers.
 
 (Replace `USERNAME` with the actual SSH user. This will prompt for password one last time.)
 
-> **Security note:** After migration is verified (Phase 4), user can remove this with:
+> **Security note:** After clone is verified (Phase 4), user can remove this with:
 > `ssh USER@NEW_IP 'sudo rm /etc/sudoers.d/migration'`
 
 ---
@@ -208,7 +208,7 @@ If not running → skip to **Phase 5: Fallback**.
 
 ---
 
-### Phase 4: Verify & Switch
+### Phase 4: Verify Clone
 
 #### 4.1 Check logs on new device
 
@@ -225,15 +225,15 @@ Ask user to:
 2. Send a message in Feishu → should get reply
 3. Check memory: ask agent "do you remember who I am"
 
-#### 4.3 Stop old device OpenClaw
+#### 4.3 (Optional) Stop old device OpenClaw
 
-⚠️ Only after user confirms new device is working:
+Only if the user wants to fully switch to the new device. Not needed for backup or multi-device use (e.g. different bot tokens):
 
 ```bash
 systemctl --user stop openclaw-gateway
 ```
 
-Tell user: "✅ Migration complete! New device is now running OpenClaw."
+Tell user: "✅ Clone complete! New device is now running OpenClaw."
 
 ---
 
@@ -255,7 +255,7 @@ If new device OpenClaw did not start correctly:
 
 3. Tell user: "Old device restored. New device deployment failed — please check logs and retry."
 
-> **Note**: `scripts/generate-instructions.sh` generates `~/migration-instructions.md` as a fallback manual guide.
+> **Note**: `scripts/generate-instructions.sh` generates `~/migration-instructions.md` as a fallback clone guide.
 > If full automation fails, user can SSH to new device and follow the document manually.
 
 ---

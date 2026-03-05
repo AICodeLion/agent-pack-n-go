@@ -23,7 +23,7 @@ update_progress() {
 
 echo ""
 echo "========================================"
-echo "  OpenClaw Migration Pack Builder"
+echo "  Agent Clone Pack Builder"
 echo "========================================"
 echo ""
 
@@ -159,11 +159,11 @@ cd ~
 step=$((step+1))
 TAR_START=$(date +%s)
 if command -v pv > /dev/null 2>&1; then
-    update_progress "${step}/${TOTAL} 创建迁移包..."
+    update_progress "${step}/${TOTAL} 创建克隆包..."
     echo "[${step}/${TOTAL}] Creating openclaw-migration-pack.tar.gz (pv)..."
     tar cz -C "$TMP_DIR" . | pv -s "$(du -sb "$TMP_DIR" | cut -f1)" > "$PACK_FILE"
 else
-    update_progress "${step}/${TOTAL} 创建迁移包..."
+    update_progress "${step}/${TOTAL} 创建克隆包..."
     echo -n "[${step}/${TOTAL}] Creating openclaw-migration-pack.tar.gz (packing...)..."
     tar czf "$PACK_FILE" -C "$TMP_DIR" .
 fi
@@ -213,11 +213,11 @@ echo -e "${GREEN}========================================${NC}"
 echo ""
 echo -e "  📦 产出文件（全部在 ${YELLOW}$HOME/${NC}）:"
 echo ""
-echo -e "    1. ${YELLOW}openclaw-migration-pack.tar.gz${NC}  ${PACK_SIZE}  ← 主迁移包"
+echo -e "    1. ${YELLOW}openclaw-migration-pack.tar.gz${NC}  ${PACK_SIZE}  ← 主克隆包"
 echo -e "    2. ${YELLOW}openclaw-migration-pack.sha256${NC}  ${CHKSUM_SIZE}  ← 校验文件"
 echo -e "    3. ${YELLOW}setup.sh${NC}                        ${SETUP_SIZE}  ← 新设备基础环境脚本"
 echo -e "    4. ${YELLOW}deploy.sh${NC}                       ${DEPLOY_SIZE}  ← OpenClaw 部署脚本"
-echo -e "    5. ${YELLOW}migration-instructions.md${NC}       ${INSTR_SIZE}  ← 手动迁移备用文档"
+echo -e "    5. ${YELLOW}migration-instructions.md${NC}       ${INSTR_SIZE}  ← 手动克隆备用文档"
 echo ""
 echo -e "  🚀 下一步：传输到新设备"
 echo -e "    ${YELLOW}bash $SCRIPT_DIR/transfer.sh USER@NEW_IP${NC}"

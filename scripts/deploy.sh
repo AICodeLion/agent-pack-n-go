@@ -76,7 +76,7 @@ NEW_USER=$(whoami)
 
 echo ""
 echo "========================================"
-echo "  OpenClaw Deploy on New Device"
+echo "  Agent Clone Deploy"
 echo "========================================"
 echo -e "  Old user: ${YELLOW}${OLD_USER}${NC}  →  New user: ${YELLOW}${NEW_USER}${NC}"
 echo ""
@@ -86,8 +86,8 @@ FAILED_STEPS=()
 
 # ─── [1/12] Extract migration pack ──────────────────────────────────────────
 step=$((step+1))
-update_progress "${step}/${TOTAL} 解压迁移包..."
-echo -n "[${step}/${TOTAL}] Extracting migration pack..."
+update_progress "${step}/${TOTAL} 解压克隆包..."
+echo -n "[${step}/${TOTAL}] Extracting clone pack..."
 if [ -f ~/openclaw-migration-pack.tar.gz ]; then
     mkdir -p "$MIGRATION_TMP"
     if tar xzf ~/openclaw-migration-pack.tar.gz -C "$MIGRATION_TMP"; then
@@ -95,11 +95,11 @@ if [ -f ~/openclaw-migration-pack.tar.gz ]; then
         echo -e " ${GREEN}✅${NC} (${EXTRACT_SIZE})"
     else
         echo -e " ${RED}❌ 解压失败${NC}"
-        FAILED_STEPS+=("Step ${step}: extract migration pack")
+        FAILED_STEPS+=("Step ${step}: extract clone pack")
     fi
 else
     echo -e " ${RED}❌ ~/openclaw-migration-pack.tar.gz not found!${NC}"
-    FAILED_STEPS+=("Step ${step}: migration pack missing")
+    FAILED_STEPS+=("Step ${step}: clone pack missing")
 fi
 
 # ─── [2/12] npm install openclaw + mcporter ─────────────────────────────────
@@ -442,7 +442,7 @@ fi
 # ─── Summary ─────────────────────────────────────────────────────────────────
 echo ""
 echo -e "${GREEN}========================================${NC}"
-echo -e "${GREEN}  Deploy Summary${NC}"
+echo -e "${GREEN}  Clone Deploy Summary${NC}"
 echo -e "${GREEN}========================================${NC}"
 echo ""
 
@@ -468,7 +468,7 @@ echo ""
 if ! command -v qmd > /dev/null 2>&1; then
     echo -e "  ${YELLOW}ℹ️  qmd (memory search) 未安装。可选安装: npm install -g @tobilu/qmd${NC}"
 fi
-echo -e "  Next: verify Discord/Feishu connectivity, then stop old device."
+echo -e "  Next: verify Discord/Feishu connectivity on new device."
 echo ""
 
 update_progress "DONE ✅ 部署完成 (${#FAILED_STEPS[@]} 个问题)"
