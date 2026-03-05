@@ -62,6 +62,8 @@ This way the user sees step-by-step updates in the chat (Discord/Feishu/etc.) in
 
 ### Phase 1: Pre-flight Check
 
+> ⚠️ **MANDATORY**: Every time this skill is triggered, the agent MUST explicitly ask the user for the target server (IP + SSH user), even if previous server info exists in the conversation context. Users may deploy to different servers in the same session. NEVER assume or reuse target info from earlier context.
+
 Ask user for:
 1. **New device IP** + SSH user
 2. **New device password** (only used once for SSH key setup)
@@ -107,6 +109,23 @@ ssh USER@NEW_IP 'echo "USERNAME ALL=(ALL) NOPASSWD:ALL" | sudo tee /etc/sudoers.
 
 > **Security note:** After migration is verified (Phase 4), user can remove this with:
 > `ssh USER@NEW_IP 'sudo rm /etc/sudoers.d/migration'`
+
+---
+
+### Phase 1.5: Network Diagnostics
+
+After SSH is confirmed, run the network check on the target device:
+
+```bash
+ssh USER@HOST 'bash -s' < <SKILL_DIR>/scripts/network-check.sh
+```
+
+Evaluate results:
+- **DIRECT** → Proceed normally. Set `DEPLOY_MODE=direct` for deploy.sh.
+- **PROXY_NEEDED** → Warn user: "目标服务器无法直连 Discord/Anthropic API，需要先配置代理。" Ask if they want to continue (deploy.sh will keep proxy configs) or pause to set up proxy first.
+- **NO_INTERNET** → Stop. Tell user to check network configuration.
+
+The network result is saved to /tmp/openclaw-network-result.txt on the target.
 
 ---
 

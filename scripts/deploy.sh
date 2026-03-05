@@ -31,7 +31,26 @@ if sudo -n true 2>/dev/null; then
     SUDO_OK=true
 fi
 
-TOTAL=12
+# ─── Detect deploy mode ───────────────────────────────────────────────────────
+# Priority: env var DEPLOY_MODE > /tmp/openclaw-network-result.txt > default (proxy)
+if [ -z "$DEPLOY_MODE" ]; then
+    if [ -f /tmp/openclaw-network-result.txt ]; then
+        NET_RESULT=$(cat /tmp/openclaw-network-result.txt 2>/dev/null | tr -d '[:space:]')
+        case "$NET_RESULT" in
+            DIRECT) DEPLOY_MODE="direct" ;;
+            *)      DEPLOY_MODE="proxy"  ;;
+        esac
+    else
+        DEPLOY_MODE="proxy"  # default: backward compat
+    fi
+fi
+
+if [ "$DEPLOY_MODE" = "direct" ]; then
+    TOTAL=13  # 12 original + 1 direct mode cleanup
+else
+    TOTAL=12
+fi
+
 PROGRESS_FILE="/tmp/openclaw-deploy-progress.txt"
 MIGRATION_TMP=~/migration-tmp
 
@@ -178,7 +197,9 @@ fi
 step=$((step+1))
 update_progress "${step}/${TOTAL} 配置 proxychains4..."
 echo -n "[${step}/${TOTAL}] Configuring proxychains4..."
-if command -v proxychains4 > /dev/null 2>&1; then
+if [ "$DEPLOY_MODE" = "direct" ]; then
+    echo -e " ${YELLOW}ℹ️  Direct mode: proxychains not needed, skipping${NC}"
+elif command -v proxychains4 > /dev/null 2>&1; then
     echo -ne " ${GREEN}✅ (already installed)${NC}"
     if [ -f "$MIGRATION_TMP/openclaw-config/proxychains4.conf" ]; then
         if [ "$SUDO_OK" = true ]; then
@@ -318,6 +339,105 @@ rm -rf "$MIGRATION_TMP"
 echo -e " ${GREEN}✅${NC}"
 echo -e "       ${YELLOW}ℹ️  setup.sh + deploy.sh kept for reference${NC}"
 echo -e "       ${YELLOW}ℹ️  To free space after verification: rm ~/openclaw-migration-pack.tar.gz ~/openclaw-migration-pack.sha256${NC}"
+
+# ─── [13/13] Direct mode config cleanup (direct mode only) ───────────────────
+if [ "$DEPLOY_MODE" = "direct" ]; then
+    step=$((step+1))
+    update_progress "${step}/${TOTAL} 直连模式配置清理..."
+    echo ""
+    echo -e "${YELLOW}[${step}/${TOTAL}] Direct mode config cleanup${NC}"
+    CLEANUP_DONE=()
+
+    # 1. Remove proxy env vars from ~/.openclaw/openclaw.json
+    OC_JSON=~/.openclaw/openclaw.json
+    if [ -f "$OC_JSON" ]; then
+        python3 << 'PYEOF'
+import json, os
+path = os.path.expanduser("~/.openclaw/openclaw.json")
+try:
+    with open(path) as f:
+        data = json.load(f)
+    removed = []
+    for sec in ("env", "environment", "envVars"):
+        if sec in data and isinstance(data[sec], dict):
+            keys = [k for k in data[sec] if any(p in k.lower() for p in ("proxy", "socks"))]
+            for k in keys:
+                del data[sec][k]
+                removed.append(f"{sec}.{k}")
+    top_proxy = [k for k in data if any(p in k.lower() for p in ("proxy", "socks"))
+                 and k not in ("env", "environment", "envVars")]
+    for k in top_proxy:
+        del data[k]
+        removed.append(k)
+    with open(path, "w") as f:
+        json.dump(data, f, indent=2, ensure_ascii=False)
+    if removed:
+        print("  Removed proxy keys: " + ", ".join(removed))
+    else:
+        print("  No proxy keys found in openclaw.json")
+except Exception as e:
+    print(f"  Warning: could not clean openclaw.json: {e}")
+PYEOF
+        echo -e "  ${GREEN}✅${NC} openclaw.json checked"
+        CLEANUP_DONE+=("openclaw.json")
+    else
+        echo -e "  ${YELLOW}ℹ️${NC}  ~/.openclaw/openclaw.json not found, skipping"
+    fi
+
+    # 2. Remove CDN hack lines added by Step 5 from /etc/hosts
+    if [ "$SUDO_OK" = true ]; then
+        CDN_COUNT=$(grep -cE 'cdn\.discordapp\.com|media\.discordapp\.net' /etc/hosts 2>/dev/null || echo 0)
+        if [ "$CDN_COUNT" -gt 0 ]; then
+            sudo sed -i '/cdn\.discordapp\.com/d;/media\.discordapp\.net/d' /etc/hosts
+            echo -e "  ${GREEN}✅${NC} /etc/hosts: removed ${CDN_COUNT} CDN hack line(s)"
+            CLEANUP_DONE+=("/etc/hosts CDN lines")
+        else
+            echo -e "  ${YELLOW}ℹ️${NC}  /etc/hosts: no CDN hack lines found"
+        fi
+    else
+        echo -e "  ${YELLOW}⚠️${NC}  sudo not available, /etc/hosts CDN lines not removed"
+        echo -e "       Manual fix: sudo sed -i '/cdn\\.discordapp\\.com/d;/media\\.discordapp\\.net/d' /etc/hosts"
+    fi
+
+    # 3. Remove HTTP_PROXY / HTTPS_PROXY from ~/.claude/settings.json
+    CLAUDE_SETTINGS=~/.claude/settings.json
+    if [ -f "$CLAUDE_SETTINGS" ] && grep -qiE 'http_proxy|https_proxy' "$CLAUDE_SETTINGS" 2>/dev/null; then
+        python3 << 'PYEOF'
+import json, os
+path = os.path.expanduser("~/.claude/settings.json")
+try:
+    with open(path) as f:
+        data = json.load(f)
+    removed = []
+    for sec in ("env", "environment"):
+        if sec in data and isinstance(data[sec], dict):
+            keys = [k for k in data[sec] if "proxy" in k.lower()]
+            for k in keys:
+                del data[sec][k]
+                removed.append(f"{sec}.{k}")
+    with open(path, "w") as f:
+        json.dump(data, f, indent=2, ensure_ascii=False)
+    if removed:
+        print("  Removed proxy keys: " + ", ".join(removed))
+    else:
+        print("  No proxy keys found in settings.json")
+except Exception as e:
+    print(f"  Warning: could not clean settings.json: {e}")
+PYEOF
+        echo -e "  ${GREEN}✅${NC} ~/.claude/settings.json proxy config cleaned"
+        CLEANUP_DONE+=("settings.json")
+    else
+        echo -e "  ${YELLOW}ℹ️${NC}  ~/.claude/settings.json: no proxy config found or file missing"
+    fi
+
+    # Cleanup summary
+    echo ""
+    if [ ${#CLEANUP_DONE[@]} -gt 0 ]; then
+        echo -e "  ${GREEN}✅ Direct mode cleanup: ${#CLEANUP_DONE[@]} file(s) processed${NC}"
+    else
+        echo -e "  ${YELLOW}ℹ️  Direct mode cleanup: nothing to remove (already clean)${NC}"
+    fi
+fi
 
 # ─── Summary ─────────────────────────────────────────────────────────────────
 echo ""
