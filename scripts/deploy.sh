@@ -199,7 +199,7 @@ if [ -f "$CLAUDE_BIN" ]; then
         echo -e " ${GREEN}✅ (already nvm wrapper)${NC}"
     else
         echo -e " ${YELLOW}⚠️  not nvm wrapper, rebuilding...${NC}"
-        CLAUDE_ACTUAL=$(find ~/.nvm -name 'claude' -type f 2>/dev/null | head -1)
+        CLAUDE_ACTUAL=$(find ~/.nvm -name 'claude' \( -type f -o -type l \) 2>/dev/null | grep '/bin/claude$' | head -1)
         if [ -n "$CLAUDE_ACTUAL" ]; then
             cat > "$CLAUDE_BIN" << 'WRAPPER'
 #!/bin/bash
@@ -216,7 +216,7 @@ WRAPPER
     fi
 else
     echo -e " ${YELLOW}⚠️  ${CLAUDE_BIN} not found, searching nvm...${NC}"
-    CLAUDE_NVM=$(find ~/.nvm -name 'claude' -type f 2>/dev/null | head -1)
+    CLAUDE_NVM=$(find ~/.nvm -name 'claude' \( -type f -o -type l \) 2>/dev/null | grep '/bin/claude$' | head -1)
     if [ -n "$CLAUDE_NVM" ]; then
         mkdir -p ~/.npm-global/bin
         cat > "$CLAUDE_BIN" <<WRAPPER
@@ -260,6 +260,8 @@ step=$((step+1))
 update_progress "${step}/${TOTAL} 恢复 Dashboard (可选)..."
 echo -n "[${step}/${TOTAL}] Restoring Dashboard (optional)..."
 if [ -d "$MIGRATION_TMP/dashboard" ]; then
+    # chmod to fix read-only .git objects from previous installs
+    chmod -R u+w ~/openclaw-dashboard 2>/dev/null || true
     cp -r "$MIGRATION_TMP/dashboard" ~/openclaw-dashboard || true
     if [ -f ~/openclaw-dashboard/backend/requirements.txt ]; then
         timeout 120 pip3 install -r ~/openclaw-dashboard/backend/requirements.txt > /tmp/pip-dashboard.log 2>&1 || true
