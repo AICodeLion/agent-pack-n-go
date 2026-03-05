@@ -224,32 +224,82 @@ If not running → skip to **Phase 5: Fallback**.
 
 ---
 
-### Phase 4: Verify Clone
+### Phase 4: Device Switch & Verification
 
-#### 4.1 Check logs on new device
+> This phase guides the user through switching to the new device and verifying everything works.
+> The agent should be warm, encouraging, and celebratory — this is the exciting finish!
 
-```bash
-ssh USER@HOST 'journalctl --user -u openclaw-gateway --no-pager -n 50'
-```
-
-Look for Discord/Feishu connection confirmation.
-
-#### 4.2 Confirm connectivity
-
-Ask user to:
-1. Send a message in Discord → should get reply
-2. Send a message in Feishu → should get reply
-3. Check memory: ask agent "do you remember who I am"
-
-#### 4.3 (Optional) Stop old device OpenClaw
-
-Only if the user wants to fully switch to the new device. Not needed for backup or multi-device use (e.g. different bot tokens):
+#### 4.1 Check Gateway logs (agent does this)
 
 ```bash
-systemctl --user stop openclaw-gateway
+ssh USER@HOST 'cat /tmp/openclaw/*.log 2>/dev/null | grep -i "discord\|feishu\|logged in\|client ready\|error" | tail -20'
 ```
 
-Tell user: "✅ Clone complete! New device is now running OpenClaw."
+Look for connection confirmations. Report to user:
+- ✅ Discord connected (if "logged in to discord" found)
+- ✅ Feishu connected (if "ws client ready" found)
+- ⚠️ qmd not installed (if "spawn qmd ENOENT" — this is optional, not a problem)
+- ❌ Errors (if any real errors found)
+
+#### 4.2 Guide device switch
+
+Tell user:
+
+> 🔄 **现在需要切换设备了！**
+>
+> 同一个 Bot Token 不能同时在两台设备上运行。接下来请你：
+>
+> **Step 1** — 在旧设备停止 OpenClaw：
+> ```bash
+> openclaw gateway stop
+> ```
+> 或者如果用的是 nohup：
+> ```bash
+> pkill -f openclaw
+> ```
+>
+> **Step 2** — 在新设备确认 Gateway 还在运行：
+> ```bash
+> ssh USER@HOST 'pgrep -af openclaw | grep -v pgrep'
+> ```
+> 如果没在运行，重新启动：
+> ```bash
+> ssh USER@HOST 'cd ~ && nohup openclaw gateway run > /tmp/openclaw-gateway.log 2>&1 &'
+> ```
+>
+> **Step 3** — 发条消息测试！随便在 Discord 或飞书说点什么，看新设备上的 Agent 是否回复。
+>
+> 准备好了告诉我，我帮你验证 ✨
+
+#### 4.3 Verify clone works
+
+After user confirms they've done the switch, ask them to test:
+
+1. **💬 消息测试** — "在 Discord/飞书上给 Agent 发条消息，看看有没有回复？"
+2. **🧠 记忆测试** — "问问新设备上的 Agent：'你还记得我是谁吗？'"
+3. **🔧 工具测试** — "让新 Agent 执行一个简单命令，比如 '帮我看看现在几点'"
+
+Wait for user to confirm each test passed.
+
+#### 4.4 Celebration! 🎉
+
+After all tests pass, send a celebration message:
+
+> 🎉🎉🎉 **克隆成功！你的 AI Agent 已经在新设备上活过来了！**
+>
+> 📋 **克隆总结：**
+> - 📦 打包：X 步完成，Y MB 打包
+> - 🚀 传输：SHA256 校验通过
+> - ⚙️ 安装：基础环境 + OpenClaw 全部就绪
+> - 🔌 连接：Discord ✅ / 飞书 ✅
+> - 🧠 记忆：完整保留
+>
+> 🧹 **后续清理（3-7 天后）：**
+> - 新设备上删除临时文件：`rm ~/openclaw-migration-pack.tar.gz ~/setup.sh ~/deploy.sh ~/migration-instructions.md`
+> - （可选）旧设备移除 sudoers：`sudo rm /etc/sudoers.d/migration`
+> - （可选）旧设备关闭服务：`systemctl --user disable openclaw-gateway`
+>
+> 🦁 **Enjoy your new home!**
 
 ---
 
@@ -273,20 +323,6 @@ If new device OpenClaw did not start correctly:
 
 > **Note**: `scripts/generate-instructions.sh` generates `~/migration-instructions.md` as a fallback clone guide.
 > If full automation fails, user can SSH to new device and follow the document manually.
-
----
-
-### Phase 6: Cleanup
-
-After 3-7 days of stable operation on new device:
-
-```bash
-# On new device: remove migration files
-rm ~/openclaw-migration-pack.tar.gz ~/setup.sh ~/deploy.sh ~/migration-instructions.md
-
-# On old device: disable service
-systemctl --user disable openclaw-gateway
-```
 
 ---
 
