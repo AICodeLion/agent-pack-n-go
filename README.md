@@ -59,14 +59,14 @@ All sensitive data transferred via rsync over SSH with triple SHA256 integrity v
 
 ## 🏆 Why agent-pack-n-go?
 
-| | agent-pack-n-go | agent-teleport | claw-roam | Official docs |
-|---|---|---|---|---|
-| **One command** | ✅ "帮我克隆" | ✅ | ✅ | ❌ Manual |
-| **Zero 3rd-party** | ✅ Pure SSH+rsync | ❌ Needs TiDB Zero | ❓ | ✅ |
-| **Data stays private** | ✅ Point-to-point | ❌ Cloud relay | ❓ | ✅ |
-| **Full clone (13 items)** | ✅ | ❓ | Partial sync | Manual |
-| **Network diagnostics** | ✅ | ❌ | ❌ | ❌ |
-| **China server tested** | ✅ Proxy support | ❓ | ❓ | ❌ |
+Most tools back up your agent's *data*. We clone the **entire agent** — it wakes up on the new machine and just works.
+
+| | agent-pack-n-go | Alternatives |
+|---|---|---|
+| 🔐 **Zero trust** | Pure SSH point-to-point. Your secrets never touch any cloud. | Cloud relay (TiDB Zero), or manual copy |
+| 🧬 **True clone, not backup** | Data + runtime (nvm/Node/Claude) + system config (/etc/hosts, crontab, proxy) — agent boots and works immediately | Data only — you still need to set up the environment manually |
+| 🤖 **Agent-driven** | Say "clone me", agent handles everything via SSH. No manual steps. | Follow a migration guide, or configure a cloud sync service |
+| 🛡️ **Works anywhere** | No sudo? Skips gracefully. No rsync? Falls back to scp. Needs proxy? Auto-detected. Always completes. | Assumes ideal environment |
 
 **Your data never passes through any third-party cloud.** Direct device-to-device transfer over SSH — the way it should be.
 
@@ -203,14 +203,14 @@ MIT
 
 ### 🏆 为什么选 agent-pack-n-go？
 
-| | agent-pack-n-go | agent-teleport | claw-roam | 官方文档 |
-|---|---|---|---|---|
-| **一句话触发** | ✅ "帮我克隆" | ✅ | ✅ | ❌ 手动 |
-| **零第三方依赖** | ✅ 纯 SSH+rsync | ❌ 需 TiDB Zero | ❓ | ✅ |
-| **数据完全私密** | ✅ 点对点传输 | ❌ 云端中转 | ❓ | ✅ |
-| **全量克隆 (13类)** | ✅ | ❓ | 部分同步 | 手动 |
-| **网络诊断** | ✅ | ❌ | ❌ | ❌ |
-| **中国服务器实测** | ✅ 代理支持 | ❓ | ❓ | ❌ |
+大多数工具只备份 Agent 的*数据*。我们克隆的是**整个 Agent**——在新设备上直接活过来，开机即用。
+
+| | agent-pack-n-go | 其他方案 |
+|---|---|---|
+| 🔐 **零信任** | 纯 SSH 点对点传输，密钥不经过任何云服务 | 云端中转（TiDB Zero），或手动复制 |
+| 🧬 **真正的克隆，不只是备份** | 数据 + 运行时环境（nvm/Node/Claude）+ 系统配置（/etc/hosts、crontab、代理）— Agent 到了就能跑 | 只备份数据——环境还得自己搭 |
+| 🤖 **Agent 全程代劳** | 说句"帮我克隆"，Agent 通过 SSH 搞定一切，无需手动操作 | 照着迁移文档操作，或配置云同步服务 |
+| 🛡️ **到哪都能跑** | 没 sudo？优雅跳过。没 rsync？降级为 scp。需要代理？自动检测。永远能跑完。 | 假设理想环境 |
 
 **你的数据不经过任何第三方云服务。** 设备到设备，SSH 直连传输——安全本该如此。
 
