@@ -177,7 +177,7 @@ rm -rf "$TMP_DIR"
 step=$((step+1))
 update_progress "${step}/${TOTAL} 生成 SHA256..."
 echo -n "[${step}/${TOTAL}] Generating pack SHA256 checksum..."
-sha256sum "$PACK_FILE" > ~/openclaw-migration-pack.sha256
+(cd ~ && sha256sum openclaw-migration-pack.tar.gz > openclaw-migration-pack.sha256)
 echo -e " ${GREEN}✅${NC}"
 
 PACK_SIZE=$(du -sh "$PACK_FILE" | cut -f1)

@@ -191,22 +191,24 @@ fi
 # ─── [7/12] Configure npm global path ───────────────────────────────────────
 update_progress "7/${TOTAL} 配置 npm 全局路径..."
 echo -n "[7/${TOTAL}] Configuring npm global path (~/.npm-global)..."
-mkdir -p ~/.npm-global
-npm config set prefix ~/.npm-global
+# Create dirs manually — avoid 'npm config set prefix' which conflicts with nvm (exit code 11)
+mkdir -p ~/.npm-global/lib ~/.npm-global/bin
+# Remove any existing prefix line from .npmrc to avoid nvm conflict
+if [ -f ~/.npmrc ] && grep -q '^prefix' ~/.npmrc; then
+    sed -i '/^prefix/d' ~/.npmrc
+fi
 
-# Add to PATH in shell rc files
-for RC in ~/.bashrc ~/.zshrc; do
-    if [ -f "$RC" ] && ! grep -q 'npm-global' "$RC"; then
+# Add NVM_DIR + npm-global PATH to .bashrc AND .profile (avoid duplicates)
+for RC in ~/.bashrc ~/.profile; do
+    touch "$RC"
+    if ! grep -q 'npm-global' "$RC"; then
         echo 'export PATH="$HOME/.npm-global/bin:$PATH"' >> "$RC"
+    fi
+    if ! grep -q 'NVM_DIR' "$RC"; then
+        { echo 'export NVM_DIR="$HOME/.nvm"'; echo '[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"'; } >> "$RC"
     fi
 done
 export PATH="$HOME/.npm-global/bin:$PATH"
-
-# Workaround: nvm warns "has a prefix setting" after npm config set prefix
-# This line auto-clears the prefix conflict on each new shell
-if [ -f ~/.bashrc ] && ! grep -q 'delete-prefix' ~/.bashrc; then
-    echo 'nvm use --delete-prefix v22 --silent 2>/dev/null || true' >> ~/.bashrc
-fi
 
 if [ "$USE_MIRROR" = true ]; then
     npm config set registry https://registry.npmmirror.com

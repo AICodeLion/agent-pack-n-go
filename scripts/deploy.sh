@@ -17,6 +17,14 @@ export NVM_DIR="$HOME/.nvm"
 [ -s "$NVM_DIR/nvm.sh" ] && source "$NVM_DIR/nvm.sh"
 export PATH="$HOME/.npm-global/bin:$PATH"
 
+# Ensure .profile has NVM_DIR + npm-global PATH for future login shells (#3)
+for _rc in ~/.bashrc ~/.profile; do
+    touch "$_rc"
+    grep -q 'npm-global' "$_rc" || echo 'export PATH="$HOME/.npm-global/bin:$PATH"' >> "$_rc"
+    grep -q 'NVM_DIR' "$_rc" || { echo 'export NVM_DIR="$HOME/.nvm"'; echo '[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"'; } >> "$_rc"
+done
+unset _rc
+
 # Check if sudo is available without password (non-interactive SSH)
 SUDO_OK=false
 if sudo -n true 2>/dev/null; then
@@ -113,12 +121,18 @@ update_progress "${step}/${TOTAL} 修复路径..."
 echo -n "[${step}/${TOTAL}] Fixing paths (${OLD_USER} → ${NEW_USER})..."
 if [ "$OLD_USER" != "$NEW_USER" ]; then
     echo ""
-    for target_file in ~/.openclaw/openclaw.json "$MIGRATION_TMP/crontab-backup.txt"; do
-        if [ -f "$target_file" ]; then
+    # Scan all .json files under ~/.openclaw/ and ~/.claude/ for old user paths
+    while IFS= read -r target_file; do
+        if grep -q "/home/${OLD_USER}" "$target_file" 2>/dev/null; then
             sed -i "s|/home/${OLD_USER}|/home/${NEW_USER}|g" "$target_file" || true
-            echo -e "       ${GREEN}✓${NC} $(basename "$target_file") paths fixed"
+            echo -e "       ${GREEN}✓${NC} ${target_file} paths fixed"
         fi
-    done
+    done < <(find ~/.openclaw ~/.claude -name '*.json' -type f 2>/dev/null)
+    # Also fix crontab backup
+    if [ -f "$MIGRATION_TMP/crontab-backup.txt" ] && grep -q "/home/${OLD_USER}" "$MIGRATION_TMP/crontab-backup.txt" 2>/dev/null; then
+        sed -i "s|/home/${OLD_USER}|/home/${NEW_USER}|g" "$MIGRATION_TMP/crontab-backup.txt" || true
+        echo -e "       ${GREEN}✓${NC} crontab-backup.txt paths fixed"
+    fi
 else
     echo -e " ${GREEN}✅${NC} (username unchanged, no fix needed)"
 fi
@@ -237,15 +251,19 @@ fi
 step=$((step+1))
 update_progress "${step}/${TOTAL} 启动 OpenClaw Gateway..."
 echo -n "[${step}/${TOTAL}] Starting OpenClaw Gateway..."
-# Install systemd service unit first (required on fresh devices)
-openclaw gateway install > /tmp/openclaw-install.log 2>&1 || true
-openclaw gateway start > /tmp/openclaw-start.log 2>&1 || {
-    echo -e " ${YELLOW}⚠️  gateway start returned non-zero (may already be running)${NC}"
-}
-sleep 3
-systemctl --user daemon-reload 2>/dev/null || true
-systemctl --user enable openclaw-gateway 2>/dev/null || true
-systemctl --user start openclaw-gateway 2>/dev/null || true
+# Try openclaw gateway install; fallback to nohup if install fails (e.g. systemctl --user unavailable)
+if openclaw gateway install > /tmp/openclaw-install.log 2>&1; then
+    openclaw gateway start > /tmp/openclaw-start.log 2>&1 || true
+    sleep 3
+    systemctl --user daemon-reload 2>/dev/null || true
+    systemctl --user enable openclaw-gateway 2>/dev/null || true
+    systemctl --user start openclaw-gateway 2>/dev/null || true
+else
+    echo -ne " ${YELLOW}(install failed, falling back to nohup)${NC}"
+    nohup openclaw gateway run > /tmp/openclaw-gateway.log 2>&1 &
+    sleep 5
+    pgrep -f 'openclaw.*gateway' > /dev/null 2>&1 && echo -ne " ${GREEN}(process running)${NC}"
+fi
 sudo loginctl enable-linger "$USER" 2>/dev/null || true
 GW_STATUS=$(openclaw gateway status 2>/dev/null || echo "unknown")
 if echo "$GW_STATUS" | grep -qi 'running\|online\|active'; then
@@ -327,6 +345,9 @@ else
 fi
 
 echo ""
+if ! command -v qmd > /dev/null 2>&1; then
+    echo -e "  ${YELLOW}ℹ️  qmd is not in PATH. Install it manually if needed (e.g. npm install -g qmd).${NC}"
+fi
 echo -e "  Next: verify Discord/Feishu connectivity, then stop old device."
 echo ""
 
