@@ -188,8 +188,9 @@ if [ -f "$PACK_FILE" ]; then
             cd ~
         fi
         cp -r /tmp/setup-extract-$$/claude-config/. ~/.claude/
+        CC_RESTORED=$(find /tmp/setup-extract-$$/claude-config -type f | wc -l)
         rm -rf "/tmp/setup-extract-$$"
-        ok
+        echo -e " ${GREEN}✅${NC} (${CC_RESTORED} 个文件已恢复)"
     else
         rm -rf "/tmp/setup-extract-$$"
         echo -e " ${YELLOW}⚠️  claude-config/ not found in migration pack, skipping${NC}"
@@ -205,12 +206,16 @@ if [ -f "$PACK_FILE" ]; then
     tar xzf "$PACK_FILE" -C /tmp/setup-extract-$$ --wildcards 'ssh-keys/*' 2>/dev/null || true
     if [ -d "/tmp/setup-extract-$$/ssh-keys" ]; then
         cp -r /tmp/setup-extract-$$/ssh-keys/. ~/.ssh/
+        SSH_RESTORED=$(find /tmp/setup-extract-$$/ssh-keys -maxdepth 1 -name 'id_*' ! -name '*.pub' 2>/dev/null | xargs -I{} basename {} | tr '\n' ', ' | sed 's/,$//')
         rm -rf "/tmp/setup-extract-$$"
         # Fix permissions
         chmod 700 ~/.ssh
         find ~/.ssh -type f \( -name 'id_*' ! -name '*.pub' \) -exec chmod 600 {} \;
         find ~/.ssh -name 'config' -exec chmod 600 {} \;
-        ok
+        echo -e " ${GREEN}✅${NC}"
+        if [ -n "$SSH_RESTORED" ]; then
+            echo -e "       密钥: ${SSH_RESTORED}"
+        fi
     else
         rm -rf "/tmp/setup-extract-$$"
         echo -e " ${YELLOW}⚠️  ssh-keys/ not found in migration pack, skipping${NC}"
@@ -236,9 +241,19 @@ else
 fi
 
 echo ""
-echo -e "${GREEN}========================================"
-echo -e "  Base environment ready!"
-echo -e "========================================${NC}"
+echo -e "${GREEN}========================================${NC}"
+echo -e "${GREEN}  ✅ Base environment ready!${NC}"
+echo -e "${GREEN}========================================${NC}"
+echo ""
+echo -e "  📋 已安装："
+echo -e "    ${GREEN}✓${NC} Node.js $(node --version 2>/dev/null || echo 'N/A')"
+echo -e "    ${GREEN}✓${NC} npm $(npm --version 2>/dev/null || echo 'N/A')"
+echo -e "    ${GREEN}✓${NC} Claude Code $(claude --version 2>/dev/null || echo 'N/A')"
+command -v proxychains4 >/dev/null 2>&1 && echo -e "    ${GREEN}✓${NC} proxychains4"
+echo ""
+echo -e "  📋 已恢复："
+[ -f ~/.claude/settings.json ] && echo -e "    ${GREEN}✓${NC} Claude Code 配置"
+[ -d ~/.ssh ] && echo -e "    ${GREEN}✓${NC} SSH 密钥 ($(find ~/.ssh -maxdepth 1 -name 'id_*' ! -name '*.pub' 2>/dev/null | wc -l) 个)"
 echo ""
 echo "Next, run the following command to let Claude Code complete the migration:"
 echo ""

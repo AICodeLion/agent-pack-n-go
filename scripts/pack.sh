@@ -9,6 +9,7 @@ NC='\033[0m'
 
 PACK_FILE=~/openclaw-migration-pack.tar.gz
 TMP_DIR=~/openclaw-migration-tmp
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 TOTAL=10
 
 echo ""
@@ -28,15 +29,21 @@ step=$((step+1))
 echo -n "[${step}/${TOTAL}] Packing ~/.openclaw/ config..."
 OPENCLAW_DIR=~/.openclaw
 if [ -d "$OPENCLAW_DIR" ]; then
+    PACKED_ITEMS=()
     for item in openclaw.json credentials skills extensions memory feishu \
                 workspace workspace-coder workspace-paper-tracker \
                 CLAUDE.md exec-approvals.json; do
         src="$OPENCLAW_DIR/$item"
         if [ -e "$src" ]; then
             cp -r "$src" "$TMP_DIR/openclaw-config/"
+            PACKED_ITEMS+=("$item")
         fi
     done
-    echo -e " ${GREEN}✅${NC}"
+    OC_SIZE=$(du -sh "$TMP_DIR/openclaw-config" | cut -f1)
+    echo -e " ${GREEN}✅${NC} (${#PACKED_ITEMS[@]} 项, ${OC_SIZE})"
+    for item in "${PACKED_ITEMS[@]}"; do
+        echo -e "       ${GREEN}✓${NC} $item"
+    done
 else
     echo -e " ${YELLOW}⚠️  ~/.openclaw/ not found, skipping${NC}"
 fi
@@ -46,7 +53,9 @@ step=$((step+1))
 echo -n "[${step}/${TOTAL}] Packing ~/.claude/ (Claude Code config)..."
 if [ -d ~/.claude ]; then
     cp -r ~/.claude/. "$TMP_DIR/claude-config/"
-    echo -e " ${GREEN}✅${NC}"
+    CC_FILES=$(find "$TMP_DIR/claude-config" -type f | wc -l)
+    CC_SIZE=$(du -sh "$TMP_DIR/claude-config" | cut -f1)
+    echo -e " ${GREEN}✅${NC} (${CC_FILES} 个文件, ${CC_SIZE})"
 else
     echo -e " ${YELLOW}⚠️  ~/.claude/ not found, skipping${NC}"
 fi
@@ -56,7 +65,11 @@ step=$((step+1))
 echo -n "[${step}/${TOTAL}] Packing ~/.ssh/ (SSH keys)..."
 if [ -d ~/.ssh ]; then
     cp -r ~/.ssh/. "$TMP_DIR/ssh-keys/"
+    SSH_KEYS=$(find "$TMP_DIR/ssh-keys" -maxdepth 1 -name 'id_*' ! -name '*.pub' 2>/dev/null | xargs -I{} basename {} | tr '\n' ', ' | sed 's/,$//')
     echo -e " ${GREEN}✅${NC}"
+    if [ -n "$SSH_KEYS" ]; then
+        echo -e "       密钥: ${SSH_KEYS}"
+    fi
 else
     echo -e " ${YELLOW}⚠️  ~/.ssh/ not found, skipping${NC}"
 fi
@@ -65,7 +78,8 @@ fi
 step=$((step+1))
 echo -n "[${step}/${TOTAL}] Exporting crontab..."
 if crontab -l > "$TMP_DIR/crontab-backup.txt" 2>/dev/null; then
-    echo -e " ${GREEN}✅${NC}"
+    CRON_COUNT=$(grep -c '[^[:space:]]' "$TMP_DIR/crontab-backup.txt" 2>/dev/null | grep -v '^#' || echo 0)
+    echo -e " ${GREEN}✅${NC} (${CRON_COUNT} 条任务)"
 else
     echo "# no crontab" > "$TMP_DIR/crontab-backup.txt"
     echo -e " ${YELLOW}⚠️  crontab is empty, created empty file${NC}"
@@ -76,7 +90,11 @@ step=$((step+1))
 echo -n "[${step}/${TOTAL}] Exporting /etc/hosts custom entries (discord|cdn)..."
 grep -Ei 'discord|cdn' /etc/hosts > "$TMP_DIR/hosts-custom.txt" 2>/dev/null || true
 if [ -s "$TMP_DIR/hosts-custom.txt" ]; then
-    echo -e " ${GREEN}✅${NC}"
+    HOSTS_COUNT=$(wc -l < "$TMP_DIR/hosts-custom.txt")
+    echo -e " ${GREEN}✅${NC} (${HOSTS_COUNT} 条)"
+    while IFS= read -r line; do
+        echo -e "       ${line}"
+    done < "$TMP_DIR/hosts-custom.txt"
 else
     echo "# no custom entries" > "$TMP_DIR/hosts-custom.txt"
     echo -e " ${YELLOW}⚠️  No discord/cdn entries found, created empty file${NC}"
@@ -142,13 +160,13 @@ echo -e " ${GREEN}✅${NC}"
 PACK_SIZE=$(du -sh "$PACK_FILE" | cut -f1)
 
 # Copy scripts to home for transfer
-cp "$(dirname "$0")/setup.sh" ~/setup.sh
+cp "$SCRIPT_DIR/setup.sh" ~/setup.sh
 chmod +x ~/setup.sh
 
 # Generate migration instructions
 echo -n "Generating migration-instructions.md..."
 OLD_USER=$(whoami)
-bash "$(dirname "$0")/generate-instructions.sh" "$OLD_USER"
+bash "$SCRIPT_DIR/generate-instructions.sh" "$OLD_USER"
 echo -e " ${GREEN}✅${NC}"
 
 # ─── Summary ─────────────────────────────────────────────────────────────────
@@ -169,7 +187,7 @@ echo -e "    3. ${YELLOW}setup.sh${NC}                        ${SETUP_SIZE}  ←
 echo -e "    4. ${YELLOW}migration-instructions.md${NC}       ${INSTR_SIZE}  ← Claude Code 迁移指令"
 echo ""
 echo -e "  🚀 下一步：传输到新设备"
-echo -e "    ${YELLOW}bash $(dirname "$0")/transfer.sh USER@NEW_IP${NC}"
+echo -e "    ${YELLOW}bash $SCRIPT_DIR/transfer.sh USER@NEW_IP${NC}"
 echo ""
 echo -e "  或手动 scp:"
 echo -e "    scp ~/openclaw-migration-pack.tar.gz ~/openclaw-migration-pack.sha256 ~/setup.sh ~/migration-instructions.md USER@NEW_IP:~/"
