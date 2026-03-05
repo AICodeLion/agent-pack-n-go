@@ -1,5 +1,7 @@
 #!/bin/bash
-set -e
+# NOTE: Intentionally NOT using set -e here.
+# Individual step failures are tracked via FAILED_STEPS array
+# and reported in the final summary, rather than aborting early.
 
 # Colors
 RED='\033[0;31m'
@@ -19,6 +21,7 @@ SUDO_OK=false
 if sudo -n true 2>/dev/null; then
     SUDO_OK=true
 fi
+FAILED_STEPS=()
 
 # ─── Spinner ─────────────────────────────────────────────────────────────────
 # Usage: run_with_spinner "label" cmd [args...]
@@ -53,12 +56,26 @@ run_with_spinner() {
 }
 
 die() {
-    echo -e "${RED}❌ Error: $1${NC}" >&2
+    echo -e "${RED}❌ Fatal: $1${NC}" >&2
+    update_progress "FAILED: $1"
     exit 1
 }
 
+# wait_apt_lock: wait up to 30s for apt lock to be released
+wait_apt_lock() {
+    local i=0
+    while fuser /var/lib/dpkg/lock-frontend >/dev/null 2>&1; do
+        [ $i -eq 0 ] && printf " ${YELLOW}(apt locked, waiting...${NC}"
+        i=$((i+1))
+        [ $i -ge 30 ] && { printf "${YELLOW} still locked, continuing)${NC}"; return 1; }
+        sleep 1
+    done
+    [ $i -gt 0 ] && printf "${YELLOW} unlocked)${NC}"
+    return 0
+}
+
 ok() { echo -e " ${GREEN}✅${NC}"; }
-fail() { echo -e " ${RED}❌${NC}"; die "$1"; }
+fail() { echo -e " ${RED}❌${NC}"; FAILED_STEPS+=("$1"); }
 
 echo ""
 echo "========================================"
@@ -84,6 +101,7 @@ fi
 update_progress "2/${TOTAL} 更新系统包..."
 printf "[2/${TOTAL}] Updating system packages..."
 if [ "$SUDO_OK" = true ]; then
+    wait_apt_lock
     if run_with_spinner "Updating system packages..." bash -c 'sudo apt-get update -y && sudo DEBIAN_FRONTEND=noninteractive apt-get upgrade -y'; then
         ok
     else
@@ -97,6 +115,7 @@ fi
 update_progress "3/${TOTAL} 安装基础依赖..."
 printf "[3/${TOTAL}] Installing base dependencies (git, curl, python3)..."
 if [ "$SUDO_OK" = true ]; then
+    wait_apt_lock
     if run_with_spinner "Installing base dependencies..." sudo apt-get install -y git curl python3 python3-pip; then
         ok
     else
@@ -182,6 +201,12 @@ for RC in ~/.bashrc ~/.zshrc; do
     fi
 done
 export PATH="$HOME/.npm-global/bin:$PATH"
+
+# Workaround: nvm warns "has a prefix setting" after npm config set prefix
+# This line auto-clears the prefix conflict on each new shell
+if [ -f ~/.bashrc ] && ! grep -q 'delete-prefix' ~/.bashrc; then
+    echo 'nvm use --delete-prefix v22 --silent 2>/dev/null || true' >> ~/.bashrc
+fi
 
 if [ "$USE_MIRROR" = true ]; then
     npm config set registry https://registry.npmmirror.com
@@ -297,6 +322,14 @@ echo ""
 echo -e "${GREEN}========================================${NC}"
 echo -e "${GREEN}  ✅ Base environment ready!${NC}"
 echo -e "${GREEN}========================================${NC}"
+
+if [ ${#FAILED_STEPS[@]} -gt 0 ]; then
+    echo ""
+    echo -e "  ${YELLOW}⚠️  ${#FAILED_STEPS[@]} step(s) had issues:${NC}"
+    for s in "${FAILED_STEPS[@]}"; do
+        echo -e "    ${RED}✗${NC} ${s}"
+    done
+fi
 echo ""
 echo -e "  📋 已安装："
 echo -e "    ${GREEN}✓${NC} Node.js $(node --version 2>/dev/null || echo 'N/A')"

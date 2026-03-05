@@ -93,6 +93,9 @@ update_progress "${step}/${TOTAL} 恢复 OpenClaw 配置..."
 echo -n "[${step}/${TOTAL}] Restoring ~/.openclaw/ config..."
 if [ -d "$MIGRATION_TMP/openclaw-config" ]; then
     mkdir -p ~/.openclaw
+    # git objects are 444 (read-only); chmod destination to allow overwrite
+    chmod -R u+w ~/.openclaw 2>/dev/null || true
+    chmod -R u+w "$MIGRATION_TMP/openclaw-config" 2>/dev/null || true
     if cp -r "$MIGRATION_TMP/openclaw-config/." ~/.openclaw/; then
         OC_ITEMS=$(ls ~/.openclaw | wc -l)
         echo -e " ${GREEN}✅${NC} (${OC_ITEMS} 项)"
@@ -212,13 +215,30 @@ WRAPPER
         fi
     fi
 else
-    echo -e " ${YELLOW}⚠️  ${CLAUDE_BIN} not found${NC}"
+    echo -e " ${YELLOW}⚠️  ${CLAUDE_BIN} not found, searching nvm...${NC}"
+    CLAUDE_NVM=$(find ~/.nvm -name 'claude' -type f 2>/dev/null | head -1)
+    if [ -n "$CLAUDE_NVM" ]; then
+        mkdir -p ~/.npm-global/bin
+        cat > "$CLAUDE_BIN" <<WRAPPER
+#!/bin/bash
+export NVM_DIR="\$HOME/.nvm"
+[ -s "\$NVM_DIR/nvm.sh" ] && source "\$NVM_DIR/nvm.sh"
+exec "${CLAUDE_NVM}" "\$@"
+WRAPPER
+        chmod +x "$CLAUDE_BIN"
+        echo -e "       ${GREEN}✓${NC} wrapper created → ${CLAUDE_NVM}"
+    else
+        echo -e "       ${YELLOW}ℹ️  claude not found in ~/.nvm either, skipping${NC}"
+        FAILED_STEPS+=("Step ${step}: claude binary not found in ~/.npm-global or ~/.nvm")
+    fi
 fi
 
 # ─── [9/12] Start OpenClaw Gateway + systemd + linger ───────────────────────
 step=$((step+1))
 update_progress "${step}/${TOTAL} 启动 OpenClaw Gateway..."
 echo -n "[${step}/${TOTAL}] Starting OpenClaw Gateway..."
+# Install systemd service unit first (required on fresh devices)
+openclaw gateway install > /tmp/openclaw-install.log 2>&1 || true
 openclaw gateway start > /tmp/openclaw-start.log 2>&1 || {
     echo -e " ${YELLOW}⚠️  gateway start returned non-zero (may already be running)${NC}"
 }
@@ -242,7 +262,7 @@ echo -n "[${step}/${TOTAL}] Restoring Dashboard (optional)..."
 if [ -d "$MIGRATION_TMP/dashboard" ]; then
     cp -r "$MIGRATION_TMP/dashboard" ~/openclaw-dashboard || true
     if [ -f ~/openclaw-dashboard/backend/requirements.txt ]; then
-        pip3 install -r ~/openclaw-dashboard/backend/requirements.txt > /tmp/pip-dashboard.log 2>&1 || true
+        timeout 120 pip3 install -r ~/openclaw-dashboard/backend/requirements.txt > /tmp/pip-dashboard.log 2>&1 || true
     fi
     echo -e " ${GREEN}✅ (restored to ~/openclaw-dashboard/)${NC}"
     echo -e "       ${YELLOW}ℹ️  Please manually configure systemd to auto-start Dashboard${NC}"
