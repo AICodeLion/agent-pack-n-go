@@ -32,6 +32,24 @@ Old Device (Agent auto)          New Device (One-click deploy)
 
 ## Execution Flow
 
+### Real-time Progress Feedback
+
+All scripts write progress to `/tmp/openclaw-{pack,transfer}-progress.txt`.
+When running scripts in background, poll the progress file and send updates to the user:
+
+```
+# Example: run pack.sh in background, poll progress every 3s
+bash <SKILL_DIR>/scripts/pack.sh &
+while true; do
+    progress=$(cat /tmp/openclaw-pack-progress.txt 2>/dev/null)
+    # Send to user if changed
+    [[ "$progress" == DONE* ]] && break
+    sleep 3
+done
+```
+
+This way the user sees step-by-step updates in the chat (Discord/Feishu/etc.) instead of silence.
+
 ### Phase 1: Pre-flight Check
 
 Ask user for:

@@ -11,6 +11,15 @@ PACK_FILE=~/openclaw-migration-pack.tar.gz
 TMP_DIR=~/openclaw-migration-tmp
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 TOTAL=10
+PROGRESS_FILE="/tmp/openclaw-pack-progress.txt"
+
+# Initialize progress file for external monitoring (e.g., agent polling)
+echo "0/${TOTAL} 初始化..." > "$PROGRESS_FILE"
+
+# Helper: update progress file
+update_progress() {
+    echo "$1" > "$PROGRESS_FILE"
+}
 
 echo ""
 echo "========================================"
@@ -26,6 +35,7 @@ step=0
 
 # ─── [1/8] Pack ~/.openclaw/ ─────────────────────────────────────────────────
 step=$((step+1))
+update_progress "${step}/${TOTAL} 打包 OpenClaw 配置..."
 echo -n "[${step}/${TOTAL}] Packing ~/.openclaw/ config..."
 OPENCLAW_DIR=~/.openclaw
 if [ -d "$OPENCLAW_DIR" ]; then
@@ -50,6 +60,7 @@ fi
 
 # ─── [2/8] Pack ~/.claude/ ───────────────────────────────────────────────────
 step=$((step+1))
+update_progress "${step}/${TOTAL} 打包 Claude Code 配置..."
 echo -n "[${step}/${TOTAL}] Packing ~/.claude/ (Claude Code config)..."
 if [ -d ~/.claude ]; then
     cp -r ~/.claude/. "$TMP_DIR/claude-config/"
@@ -62,6 +73,7 @@ fi
 
 # ─── [3/8] Pack ~/.ssh/ ──────────────────────────────────────────────────────
 step=$((step+1))
+update_progress "${step}/${TOTAL} 打包 SSH 密钥..."
 echo -n "[${step}/${TOTAL}] Packing ~/.ssh/ (SSH keys)..."
 if [ -d ~/.ssh ]; then
     cp -r ~/.ssh/. "$TMP_DIR/ssh-keys/"
@@ -76,6 +88,7 @@ fi
 
 # ─── [4/8] Export crontab ────────────────────────────────────────────────────
 step=$((step+1))
+update_progress "${step}/${TOTAL} 导出 crontab..."
 echo -n "[${step}/${TOTAL}] Exporting crontab..."
 if crontab -l > "$TMP_DIR/crontab-backup.txt" 2>/dev/null; then
     CRON_COUNT=$(grep -c '[^[:space:]]' "$TMP_DIR/crontab-backup.txt" 2>/dev/null | grep -v '^#' || echo 0)
@@ -87,6 +100,7 @@ fi
 
 # ─── [5/8] Export /etc/hosts custom entries ──────────────────────────────────
 step=$((step+1))
+update_progress "${step}/${TOTAL} 导出 hosts 配置..."
 echo -n "[${step}/${TOTAL}] Exporting /etc/hosts custom entries (discord|cdn)..."
 grep -Ei 'discord|cdn' /etc/hosts > "$TMP_DIR/hosts-custom.txt" 2>/dev/null || true
 if [ -s "$TMP_DIR/hosts-custom.txt" ]; then
@@ -102,6 +116,7 @@ fi
 
 # ─── [6/8] Pack Dashboard (optional) ────────────────────────────────────────
 step=$((step+1))
+update_progress "${step}/${TOTAL} 检查 Dashboard..."
 echo -n "[${step}/${TOTAL}] Checking ~/openclaw-dashboard/..."
 if [ -d ~/openclaw-dashboard ]; then
     cp -r ~/openclaw-dashboard "$TMP_DIR/dashboard"
@@ -112,12 +127,14 @@ fi
 
 # ─── [7/8] Record old username ───────────────────────────────────────────────
 step=$((step+1))
+update_progress "${step}/${TOTAL} 记录用户名..."
 echo -n "[${step}/${TOTAL}] Recording old device username..."
 whoami > "$TMP_DIR/old_user.txt"
 echo -e " ${GREEN}✅ ($(cat "$TMP_DIR/old_user.txt"))${NC}"
 
 # ─── [8/10] Generate manifest checksum ───────────────────────────────────────
 step=$((step+1))
+update_progress "${step}/${TOTAL} 生成校验文件..."
 echo -n "[${step}/${TOTAL}] Generating critical file checksums (manifest.sha256)..."
 cd "$TMP_DIR"
 MANIFEST_FILES=""
@@ -139,9 +156,11 @@ cd ~
 step=$((step+1))
 TAR_START=$(date +%s)
 if command -v pv > /dev/null 2>&1; then
+    update_progress "${step}/${TOTAL} 创建迁移包..."
     echo "[${step}/${TOTAL}] Creating openclaw-migration-pack.tar.gz (pv)..."
     tar cz -C "$TMP_DIR" . | pv -s "$(du -sb "$TMP_DIR" | cut -f1)" > "$PACK_FILE"
 else
+    update_progress "${step}/${TOTAL} 创建迁移包..."
     echo -n "[${step}/${TOTAL}] Creating openclaw-migration-pack.tar.gz (packing...)..."
     tar czf "$PACK_FILE" -C "$TMP_DIR" .
 fi
@@ -153,6 +172,7 @@ rm -rf "$TMP_DIR"
 
 # ─── [10/10] Generate pack checksum ─────────────────────────────────────────
 step=$((step+1))
+update_progress "${step}/${TOTAL} 生成 SHA256..."
 echo -n "[${step}/${TOTAL}] Generating pack SHA256 checksum..."
 sha256sum "$PACK_FILE" > ~/openclaw-migration-pack.sha256
 echo -e " ${GREEN}✅${NC}"
@@ -192,3 +212,6 @@ echo ""
 echo -e "  或手动 scp:"
 echo -e "    scp ~/openclaw-migration-pack.tar.gz ~/openclaw-migration-pack.sha256 ~/setup.sh ~/migration-instructions.md USER@NEW_IP:~/"
 echo ""
+
+# Mark completion in progress file
+update_progress "DONE ✅ 打包完成 (${PACK_SIZE})"

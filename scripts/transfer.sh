@@ -28,6 +28,9 @@ fi
 TARGET="$1"
 shift
 
+PROGRESS_FILE="/tmp/openclaw-transfer-progress.txt"
+update_progress() { echo "$1" > "$PROGRESS_FILE"; }
+
 # Override file list if provided
 if [ $# -gt 0 ]; then
     FILES=("$@")
@@ -70,6 +73,8 @@ echo -e "  📦 总大小: ${YELLOW}${TOTAL_SIZE}${NC}"
 echo -e "  🎯 目标:   ${YELLOW}${TARGET}:~/${NC}"
 echo ""
 
+update_progress "传输中 → ${TARGET} (${TOTAL_SIZE})..."
+
 # ─── Transfer ────────────────────────────────────────────────────────────────
 T_START=$(date +%s)
 
@@ -91,6 +96,8 @@ ELAPSED=$((T_END - T_START))
 echo ""
 echo -e "${GREEN}✅ Transfer complete (${TRANSFER_METHOD}, ${ELAPSED}s)${NC}"
 echo ""
+
+update_progress "校验中..."
 
 # ─── SHA256 verification on remote ──────────────────────────────────────────
 echo -n "Verifying SHA256 on remote..."
@@ -117,3 +124,5 @@ echo ""
 echo "  Next: SSH to ${TARGET} and run:"
 echo -e "    ${YELLOW}bash ~/setup.sh${NC}"
 echo ""
+
+update_progress "DONE ✅ 传输完成 (${TRANSFER_METHOD}, ${ELAPSED}s)"
