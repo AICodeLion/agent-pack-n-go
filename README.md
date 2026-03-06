@@ -19,14 +19,20 @@
 
 ## ⚡ Quick Start
 
+**Install** — tell your agent:
+
+> *"Install agent-pack-n-go from https://github.com/AICodeLion/agent-pack-n-go"*
+
+Or manually:
+
 ```bash
-# Install
 cd ~/.openclaw/skills
 git clone https://github.com/AICodeLion/agent-pack-n-go.git
-
-# Use — just tell your agent:
-"Clone my agent to a new device"
 ```
+
+**Use** — tell your agent:
+
+> *"Clone my agent to a new device"*
 
 The agent asks for SSH credentials, then handles everything automatically. ~25 minutes, zero manual steps after SSH key setup.
 
@@ -189,14 +195,20 @@ agent-pack-n-go/
 
 ## ⚡ 快速开始
 
+**安装** — 对你的 Agent 说：
+
+> *"帮我安装 agent-pack-n-go from https://github.com/AICodeLion/agent-pack-n-go"*
+
+或手动安装：
+
 ```bash
-# 安装
 cd ~/.openclaw/skills
 git clone https://github.com/AICodeLion/agent-pack-n-go.git
-
-# 使用 — 对你的 Agent 说：
-"帮我克隆到新设备"
 ```
+
+**使用** — 对你的 Agent 说：
+
+> *"帮我克隆到新设备"*
 
 Agent 会询问 SSH 信息，然后全自动完成。总耗时约 25 分钟，SSH 配置后无需手动操作。
 
