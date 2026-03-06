@@ -183,6 +183,7 @@ agent-pack-n-go/
 <a id="中文"></a>
 
 <div align="center">
+  <img src="assets/logo.png" width="140" alt="agent-pack-n-go" />
   <h1>agent-pack-n-go</h1>
   <p><strong>一句话克隆你的 AI Agent 到新设备。全自动，零云依赖。</strong></p>
   <p>
