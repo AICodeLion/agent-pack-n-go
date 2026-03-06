@@ -8,7 +8,7 @@ Your agent isn't just code — it's months of memory, tuned preferences, install
 
 ---
 
-## Quick Start
+## ⚡ Quick Start
 
 ### Install
 
@@ -31,7 +31,7 @@ The agent will ask for SSH credentials, then handle everything automatically. ~2
 
 ---
 
-## Why agent-pack-n-go?
+## 💡 Why agent-pack-n-go?
 
 Most tools **back up** your agent's files. We **clone** the entire agent — it wakes up on the new machine and just works.
 
@@ -40,7 +40,7 @@ Backup  = save files → manually install runtime → manually configure → hop
 Clone   = data + runtime + credentials + system config → agent boots immediately
 ```
 
-### Feature Comparison
+### 📊 Feature Comparison
 
 | Feature | agent-pack-n-go | agent-life | OpenClaw Backup | GitClaw | Official Docs |
 |---|:---:|:---:|:---:|:---:|:---:|
@@ -64,7 +64,7 @@ Clone   = data + runtime + credentials + system config → agent boots immediate
 
 ---
 
-## How It Works
+## ⚙️ How It Works
 
 ```
 Old Device                              New Device
@@ -90,7 +90,7 @@ Old Device                              New Device
 
 ---
 
-## What Gets Cloned
+## 📋 What Gets Cloned
 
 | Item | Description |
 |------|-------------|
@@ -103,7 +103,7 @@ Old Device                              New Device
 
 ---
 
-## Use Cases
+## 🎯 Use Cases
 
 - 🔄 **Clone** — Move to a faster machine, or run a copy elsewhere
 - 💾 **Backup** — Save the tarball; restore anytime in minutes
@@ -112,7 +112,7 @@ Old Device                              New Device
 
 ---
 
-## Security
+## 🔐 Security
 
 All data transferred via rsync over SSH. No third-party cloud, no intermediate storage.
 
@@ -122,7 +122,7 @@ All data transferred via rsync over SSH. No third-party cloud, no intermediate s
 
 ---
 
-## Features
+## ✨ Features
 
 - 📦 **Agent-driven** — provide SSH info, agent handles the rest remotely
 - 🌐 **Network auto-detection** — direct vs. proxy, npm mirror selection
@@ -133,7 +133,7 @@ All data transferred via rsync over SSH. No third-party cloud, no intermediate s
 
 ---
 
-## Requirements
+## 📝 Requirements
 
 > 🐧 **Linux → Linux.** Both devices must be Linux (Ubuntu recommended).
 
@@ -145,7 +145,7 @@ All data transferred via rsync over SSH. No third-party cloud, no intermediate s
 
 ---
 
-## Project Structure
+## 🗂️ Project Structure
 
 ```
 agent-pack-n-go/
@@ -165,13 +165,13 @@ agent-pack-n-go/
 
 ---
 
-## License
+## 📄 License
 
 MIT
 
 ---
 
-## References
+## 📚 References
 
 - [agent-life](https://agent-life.ai/) — Cross-framework agent migration with neutral format and zero-knowledge encryption
 - [OpenClaw Backup](https://lobehub.com/skills/liuzln-openclaw-skills-openclaw-backup) — Python-based backup and restore for OpenClaw configurations
@@ -188,7 +188,7 @@ MIT
 
 **agent-pack-n-go** 把 Agent 克隆到任何地方。只要告诉 Agent 新设备在哪，剩下的它全搞定。**告诉 Agent → 看着它干 → 搞定。**
 
-### 快速开始
+### ⚡ 快速开始
 
 ```bash
 # 安装
@@ -199,7 +199,7 @@ git clone https://github.com/AICodeLion/agent-pack-n-go.git
 "帮我克隆到新设备"
 ```
 
-### 克隆流程
+### ⚙️ 克隆流程
 
 ```
 旧设备（Agent 全程控制）                  新设备（SSH 远程）
@@ -222,11 +222,13 @@ git clone https://github.com/AICodeLion/agent-pack-n-go.git
 | 切换与验证 | 3 分钟 | 👤 Agent 引导 |
 | **总计** | **约 25 分钟** | |
 
-### 为什么选 agent-pack-n-go？
+### 💡 为什么选 agent-pack-n-go？
 
 > **备份** = 存文件 → 手动装环境 → 手动配置 → 祈祷能跑
 >
 > **克隆** = 数据 + 运行时 + 凭证 + 系统配置 → Agent 到了就能跑
+
+**📊 功能对比**
 
 | 功能 | agent-pack-n-go | agent-life | OpenClaw Backup | GitClaw | 官方文档 |
 |---|:---:|:---:|:---:|:---:|:---:|
@@ -242,7 +244,7 @@ git clone https://github.com/AICodeLion/agent-pack-n-go.git
 | 跨框架 | 🔧 | ✅ | ❌ | ❌ | ❌ |
 | 完整性校验 | ✅ | ✅ | ❌ | ❌ | ❌ |
 
-### 克隆内容
+### 📋 克隆内容
 
 | 内容 | 说明 |
 |------|------|
@@ -253,13 +255,13 @@ git clone https://github.com/AICodeLion/agent-pack-n-go.git
 | /etc/hosts | 自定义 DNS 条目 |
 | Dashboard | 可选，如果存在则打包 |
 
-### 安全
+### 🔐 安全
 
 - 🔒 **三重 SHA256 校验** — 打包、传输、安装每个阶段验证
 - 🔐 **纯 SSH 传输** — 凭证不经过任何第三方
 - 🛡️ **优雅降级** — 没 sudo/rsync 也能跑完
 
-### 设备要求
+### 📝 设备要求
 
 | | 旧设备 | 新设备 |
 |---|-------|-------|
@@ -267,6 +269,6 @@ git clone https://github.com/AICodeLion/agent-pack-n-go.git
 | **硬件** | — | 2 核 CPU，2GB+ 内存 |
 | **访问** | — | SSH + sudo 权限 |
 
-### 许可证
+### 📄 许可证
 
 MIT
