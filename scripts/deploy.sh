@@ -61,25 +61,14 @@ update_progress() {
     echo "$1" > "$PROGRESS_FILE"
 }
 
-# Accept OLD_USER as arg or read from migration-tmp
-if [ -n "$1" ]; then
-    OLD_USER="$1"
-elif [ -f "$MIGRATION_TMP/old_user.txt" ]; then
-    OLD_USER=$(cat "$MIGRATION_TMP/old_user.txt")
-elif [ -f ~/migration-tmp/old_user.txt ]; then
-    OLD_USER=$(cat ~/migration-tmp/old_user.txt)
-else
-    OLD_USER=$(whoami)
-fi
-
+# OLD_USER will be resolved AFTER extraction (see below)
+OLD_USER=""
 NEW_USER=$(whoami)
 
 echo ""
 echo "========================================"
 echo "  Agent Clone Deploy"
 echo "========================================"
-echo -e "  Old user: ${YELLOW}${OLD_USER}${NC}  →  New user: ${YELLOW}${NEW_USER}${NC}"
-echo ""
 
 step=0
 FAILED_STEPS=()
@@ -97,6 +86,18 @@ if [ -f ~/openclaw-migration-pack.tar.gz ]; then
         echo -e " ${RED}❌ 解压失败${NC}"
         FAILED_STEPS+=("Step ${step}: extract clone pack")
     fi
+
+# Resolve OLD_USER now that the pack is extracted
+if [ -n "$1" ]; then
+    OLD_USER="$1"
+elif [ -f "$MIGRATION_TMP/old_user.txt" ]; then
+    OLD_USER=$(cat "$MIGRATION_TMP/old_user.txt")
+else
+    OLD_USER="$NEW_USER"
+    echo -e "  ${YELLOW}⚠️  old_user.txt not found in pack, assuming same user${NC}"
+fi
+
+echo -e "  Old user: ${YELLOW}${OLD_USER}${NC}  →  New user: ${YELLOW}${NEW_USER}${NC}"
 else
     echo -e " ${RED}❌ ~/openclaw-migration-pack.tar.gz not found!${NC}"
     FAILED_STEPS+=("Step ${step}: clone pack missing")
