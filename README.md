@@ -136,6 +136,8 @@ Clone   = data + runtime + credentials + system config → agent boots immediate
 
 ## 📝 Requirements
 
+> Currently optimized for **Linux → Linux**. macOS and Windows (WSL) support is under testing.
+
 | | Old Device | New Device |
 |---|-----------|------------|
 | OS | Any Linux with OpenClaw | Ubuntu 22.04 / 24.04 |
@@ -311,6 +313,8 @@ Agent 在旧设备上通过 SSH 控制一切，你只需确认。
 ---
 
 ## 📝 设备要求
+
+> 目前最适配 **Linux → Linux** 环境，macOS 和 Windows (WSL) 支持正在测试中。
 
 | | 旧设备 | 新设备 |
 |---|-------|--------|
