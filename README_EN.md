@@ -134,19 +134,6 @@ Clone   = data + runtime + credentials + system config → agent boots immediate
 
 ---
 
-## ❓ FAQ
-
-**Can I still use my original agent after cloning?**
-Yes. Cloning creates a snapshot copy — your original device is completely unaffected.
-
-**What if I clone to a friend?**
-The same Discord Bot can't be online on two devices simultaneously. Have your friend create their own Bot — you keep yours, they use theirs, no interference.
-
-**Will memory sync between the two after cloning?**
-No. After cloning, each agent evolves independently — like parallel universes that forked.
-
----
-
 ## 📝 Requirements
 
 > Currently optimized for **Linux → Linux**. macOS and Windows (WSL) support is under testing.
